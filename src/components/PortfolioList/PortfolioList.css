@@ -1,0 +1,45 @@
+.SA-portfolio {
+  list-style-type: none;
+
+}
+.SA-portfolio-label {
+  background-color: white;
+  width: 95%;
+  padding-left: 20px;
+}
+
+.SA-portfolio-sector {
+  background-color: white;
+  width: 90%;
+  padding-left: 10px;
+  margin-left: 35px;
+}
+
+.SA-portfolio-investments {
+  background-color: grey;
+  width: 85%;
+  margin-top: 2px;
+  padding-left: 10px;
+  margin-left: 35px;
+}
+
+.SA-title {
+  text-align: center;
+}
+
+.SA-button {
+  display: block;
+  margin: auto;
+}
+
+.SA-new-portfolio {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.SA-new-sector {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
