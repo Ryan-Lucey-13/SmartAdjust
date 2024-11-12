@@ -9,20 +9,51 @@ function  PortfolioList(props) {
       <ul>
         {props.portfolios.map(portfolio => (
           <li className="SA-portfolio" key={portfolio.label}>
-            <Link to={'/portfolio/'}>
-              <h2 className="SA-portfolio-label" onClick={() => props.selectPortfolio(portfolio.label)}>
-                {portfolio.label.charAt(0).toUpperCase() + portfolio.label.slice(1) + " : $" + props.totalValue}
-
-              </h2>
-            </Link>
+            {props.editingPortfolio === portfolio.label ? (
+              <div>
+                <input 
+                  type="text"
+                  value={props.newPortfolioName}
+                  onChange={(ev) => props.setNewPortfolioName(ev.target.value)}
+                />
+                <button onClick={() => props.handlePortfolioSaveClick(portfolio.label)}>Save</button>
+                <button onClick={props.handlePortfolioCancelClick}>Cancel</button>
+              </div>
+              ) : (
+            <div>
+              <Link to={'/portfolio/'}>
+                <h2 className="SA-portfolio-label" onClick={() => props.selectPortfolio(portfolio.label)}>
+                  {portfolio.label.charAt(0).toUpperCase() + portfolio.label.slice(1) + " : $" + props.portfolioTotals[props.portfolios.indexOf(portfolio)]}
+                </h2>
+              </Link>
+              <button onClick={() => props.handlePortfolioEditClick(portfolio)}>Edit</button>
+              <button onClick={() => props.deletePortfolio(portfolio.label)}>Delete</button>
+            </div>
+            )}
             {portfolio.assets.map(sector => (
               <div key={sector.label}>
-              <Link to={'/sector/'}>
-                <h3 className="SA-portfolio-sector" onClick={() => props.selectSector(sector.label)}>
-                  - {sector.label.charAt(0).toUpperCase() + sector.label.slice(1)}
-                  {props.sectorTotals[sector.label] !== undefined && ` : $${props.sectorTotals[sector.label]}`}
-                </h3>
-              </Link>
+              {props.editingSector === sector.label ? (
+                <div>
+                  <input 
+                  type="text"
+                  value={props.newSectorName}
+                  onChange={(ev) => props.setNewSectorName(ev.target.value)}
+                  />
+                  <button onClick={() => props.handleSectorSaveClick(portfolio.label)}>Save</button>
+                  <button onClick={props.handleSectorCancelClick}>Cancel</button>
+                </div>
+              ) : (
+                <div>
+                  <Link to={'/sector/'}>
+                    <h3 className="SA-portfolio-sector" onClick={() => props.selectSector(sector.label)}>
+                      - {sector.label.charAt(0).toUpperCase() + sector.label.slice(1)}
+                      {props.sectorTotals[sector.label] !== undefined && ` : $${props.sectorTotals[sector.label]}`}
+                    </h3>
+                  </Link>
+                  <button onClick={() => props.handleSectorEditClick(sector)}>Edit</button>
+                  <button onClick={() => props.deleteSector(portfolio.label, sector.label)}>Delete</button>
+                </div>
+              )}
                 {props.renderItems(sector.assets || [])}
               </div>
             ))}

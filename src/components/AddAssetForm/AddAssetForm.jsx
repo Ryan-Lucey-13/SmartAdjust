@@ -5,16 +5,18 @@ import './AddAssetForm.css';
 
 
 function  AddAssetForm(props) {
-    const [assetLabel, setAssetLabel] = useState('');
-    const [assetValue, setAssetValue] = useState('');
+  const [assetLabel, setAssetLabel] = useState('');
+  const [assetValue, setAssetValue] = useState('');
+  const [assetDate, setAssetDate] = useState('');
 
-    function handleAddAsset() {
-      if (props.selectedPortfolio && props.selectedSector && assetLabel && assetValue) {
-        props.addAsset(props.selectedPortfolio, props.selectedSector, { label: assetLabel, value: parseFloat(assetValue) });
-        setAssetLabel('');
-        setAssetValue('');
-      }
+  function handleAddAsset() {
+    if (props.selectedPortfolio && props.selectedSector && assetLabel && assetValue && assetDate) {
+      props.addAsset(props.selectedPortfolio, props.selectedSector, { label: assetLabel, value: parseFloat(assetValue), date: assetDate });
+      setAssetLabel('');
+      setAssetValue('');
+      setAssetDate('');
     }
+  }
 
   return(
     <div>
@@ -48,6 +50,11 @@ function  AddAssetForm(props) {
       <label>
         Asset Value:
         <input type="number" value={assetValue} onChange={(ev) => setAssetValue(ev.target.value)} />
+      </label>
+      <br />
+      <label>
+        Asset Date:
+        <input type="date" value={assetDate} onChange={(ev) => setAssetDate(ev.target.value)} />
       </label>
       <br />
       <Link to={"/"}>
