@@ -6,59 +6,16 @@ import './PortfolioView.css';
 
 
 function  PortfolioView(props) {
-  const data = {
-    categories: [
-      '01/01/2020',
-      '02/01/2020',
-      '03/01/2020',
-      '04/01/2020',
-      '05/01/2020',
-      '06/01/2020',
-      '07/01/2020',
-      '08/01/2020',
-      '09/01/2020',
-      '10/01/2020',
-      '11/01/2020',
-      '12/01/2020',
-    ],
-    series: [
-      {
-        name: 'Seoul',
-        data: [-3.5, -1.1, 4.0, 11.3, 17.5, 21.5, 25.9, 27.2, 24.4, 13.9, 6.6, -0.6],
-      },
-      {
-        name: 'Seattle',
-        data: [3.8, 5.6, 7.0, 9.1, 12.4, 15.3, 17.5, 17.8, 15.0, 10.6, 6.6, 3.7],
-      },
-      {
-        name: 'Sydney',
-        data: [22.1, 22.0, 20.9, 18.3, 15.2, 12.8, 11.8, 13.0, 15.2, 17.6, 19.4, 21.2],
-      },
-      {
-        name: 'Moscow',
-        data: [-10.3, -9.1, -4.1, 4.4, 12.2, 16.3, 18.5, 16.7, 10.9, 4.2, -2.0, -7.5],
-      },
-      {
-        name: 'Jungfrau',
-        data: [-13.2, -13.7, -13.1, -10.3, -6.1, -3.2, 0.0, -0.1, -1.8, -4.5, -9.0, -10.9],
-      },
-    ],
-  };
-  const options = {
-    chart: { title: '24-hr Average Temperature', width: 1000, height: 500 },
-    xAxis: {
-      title: 'Month',
-    },
-    yAxis: {
-      title: 'Amount',
-    },
-    tooltip: {
-      formatter: (value) => `${value}°C`,
-    },
-    legend: {
-      align: 'bottom',
-    },
-  };
+
+  const totalValue = props.portfolios
+    .filter(portfolio => portfolio.label === props.selectedPortfolio) // Only include the selected portfolio
+    .reduce((total, portfolio) => {
+      // Sum the sector totals of the selected portfolio
+      const portfolioTotal = portfolio.assets.reduce((sectorTotal, sector) => {
+        return sectorTotal + (props.sectorTotals[sector.label] || 0);
+      }, 0);
+      return total + portfolioTotal; // Accumulate the total for all sectors in the selected portfolio
+  }, 0);
 
   return(
     <div>
@@ -66,9 +23,79 @@ function  PortfolioView(props) {
         <button onClick={() => props.setChoosePortfolio(false)}>Return to Portfolios</button>
       </Link>
       <h1>{props.selectedPortfolio.charAt(0).toUpperCase() + props.selectedPortfolio.slice(1)}</h1>
-      <div id="chart-area">
-        <LineChart data={data} options={options} />
-      </div>
+      <h2>${props.updatedTotalValue.toFixed(2)}/${totalValue.toFixed(2)}</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Sector</th>
+            <th>Initial Investment</th>
+            <th>MKT Value</th>
+            <th>% Change</th>
+            <th>Initial Portfolio %</th>
+            <th>Current Portfolio %</th>
+            <th>Remove Investment</th>
+          </tr>
+        </thead>
+        <tbody>
+          {props.portfolios
+            .filter(portfolio => portfolio.label === props.selectedPortfolio)
+            .map((portfolio, index) => (
+            portfolio.assets.map((sector, index) => (
+              <tr key={index}>
+                <td><Link to='/sector/' onClick={() => props.selectSector(sector.label)}>{sector.label.charAt(0).toUpperCase() + sector.label.slice(1)}</Link></td>
+                <td>${props.sectorTotals[sector.label].toFixed(2)}</td>
+                <td>${(props.sectorMarketValues[sector.label] || 0).toFixed(2)}</td>
+                <td>{((((props.sectorMarketValues[sector.label] - props.sectorTotals[sector.label])/props.sectorTotals[sector.label])*100)).toFixed(2)}%</td>
+                <td>{((props.sectorTotals[sector.label]/totalValue)*100).toFixed(2)}%</td>
+                <td>{((props.sectorMarketValues[sector.label]/props.updatedTotalValue)*100).toFixed(2)}%</td>
+                <td>
+                  <button onClick={() => props.deleteSector(portfolio.label, sector.label)}>X</button>
+                </td>
+              </tr>
+            ))
+          ))}
+        </tbody>
+      </table>
+      
+      {props.smartAdjust === true ?
+        <div>
+          <h2>SmartAdjusted Portfolio</h2>
+          <h4>Current Portfolio Value: ${props.updatedTotalValue.toFixed(2)}</h4>
+          <p>*Based on your initial portfolio percentages this is how to adjust your portfolio to return to those percentages</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Position</th>
+                <th>Target %</th>
+                <th>Adjusted Value</th>
+                <th>Adjustment Help</th>
+              </tr>
+            </thead>
+            <tbody>
+            {props.portfolios
+              .filter(portfolio => portfolio.label === props.selectedPortfolio)
+              .map((portfolio, index) => (
+              portfolio.assets.map((sector, index) => (
+                <tr key={index}>
+                  <td><Link to='/sector/' onClick={() => props.selectSector(sector.label)}>{sector.label.charAt(0).toUpperCase() + sector.label.slice(1)}</Link></td>
+                  <td>{((props.sectorTotals[sector.label]/totalValue)*100).toFixed(2)}%</td>
+                  <td>${(props.updatedTotalValue*(props.sectorTotals[sector.label]/totalValue)).toFixed(2)}</td>
+                  <td>
+                  {
+                  props.sectorMarketValues[sector.label] < (props.updatedTotalValue*(props.sectorTotals[sector.label]/totalValue)) ? `Increase investment by $${((props.updatedTotalValue*(props.sectorTotals[sector.label]/totalValue)) - props.sectorMarketValues[sector.label]).toFixed(2)}.` : 
+                  props.sectorMarketValues[sector.label] > (props.updatedTotalValue*(props.sectorTotals[sector.label]/totalValue)) ? `Decrease investment by $${(props.sectorMarketValues[sector.label] - (props.updatedTotalValue*(props.sectorTotals[sector.label]/totalValue))).toFixed(2)}.`  :
+                  "Investment value remains the same."
+                  }
+                  </td>
+                </tr>
+              ))
+            ))}
+            </tbody>
+          </table>
+        </div>
+        :
+        <button onClick={()=> props.setSmartAdjust(true)}>SmartAdjust</button> 
+      }
     </div>
   );
 }

@@ -5,19 +5,7 @@ import './AddAssetForm.css';
 
 
 function  AddAssetForm(props) {
-  const [assetLabel, setAssetLabel] = useState('');
-  const [assetValue, setAssetValue] = useState('');
-  const [assetDate, setAssetDate] = useState('');
-
-  function handleAddAsset() {
-    if (props.selectedPortfolio && props.selectedSector && assetLabel && assetValue && assetDate) {
-      props.addAsset(props.selectedPortfolio, props.selectedSector, { label: assetLabel, value: parseFloat(assetValue), date: assetDate });
-      setAssetLabel('');
-      setAssetValue('');
-      setAssetDate('');
-    }
-  }
-
+    
   return(
     <div>
       <h2>Add Asset</h2>
@@ -44,21 +32,34 @@ function  AddAssetForm(props) {
       <br />
       <label>
         Asset Label:
-        <input type="text" value={assetLabel} onChange={(ev) => setAssetLabel(ev.target.value)} />
+        <input type="text" value={props.inputValue} onChange={props.handleInputChange} />
+          {props.stockSuggestions.length > 0 && (
+            <ul className="autocomplete-suggestions">
+                {props.stockSuggestions.map((suggestion, index) => (
+                    <li
+                        key={index}
+                        onClick={() => props.handleSuggestionClick(suggestion)}
+                        className="autocomplete-suggestion"
+                    >
+                        <strong>{suggestion.symbol}</strong> - {suggestion.name}
+                    </li>
+                ))}
+            </ul>
+          )}
       </label>
       <br />
       <label>
         Asset Value:
-        <input type="number" value={assetValue} onChange={(ev) => setAssetValue(ev.target.value)} />
+        <input type="number" value={props.assetValue} onChange={(ev) => props.setAssetValue(ev.target.value)} />
       </label>
       <br />
       <label>
         Asset Date:
-        <input type="date" value={assetDate} onChange={(ev) => setAssetDate(ev.target.value)} />
+        <input type="date" value={props.assetDate} onChange={(ev) => props.setAssetDate(ev.target.value)} />
       </label>
       <br />
       <Link to={"/"}>
-        <button onClick={handleAddAsset}>Add Asset</button>
+        <button onClick={props.handleAddAsset}>Add Asset</button>
       </Link>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { LineChart, PieChart } from '@toast-ui/react-chart';
 import '@toast-ui/chart/dist/toastui-chart.css';
@@ -17,10 +18,17 @@ function App(props) {
       label: "portfolio 1",
       assets: [ 
         {
-          label: "stocks",
+          label: "Tech",
           assets: [
             { label: "NVDA", value: 1000, date: '2024-09-05' },
             { label: "AMZN", value: 1000, date: '2024-09-05' }
+          ]
+        },
+        {
+          label: "ETF",
+          assets: [
+            { label: "VTI", value: 1000, date: '2024-09-05' },
+            { label: "VT", value: 200, date: '2024-09-05' }
           ]
         },
       ]
@@ -37,7 +45,7 @@ function App(props) {
   function handleNewPortfolioClick() {
     setNewPortfolio(true);
   }
-
+  
   function cancelNewPortfolioInput() {
     setNewPortfolio(false);
     setInput('');
@@ -186,27 +194,40 @@ function App(props) {
   }
 
   function addAsset(portfolioLabel, sectorLabel, asset) {
-      setPortfolios(prevPortfolios =>
-        prevPortfolios.map(portfolio => {
-          if (portfolio.label === portfolioLabel) {
-            return {
-              ...portfolio,
-              assets: portfolio.assets.map(sector =>{
-                if (sector.label === sectorLabel) {
+    const uppercaseAsset = {
+      ...asset,
+      label: asset.label.toUpperCase()
+    };
+    setPortfolios(prevPortfolios =>
+      prevPortfolios.map(portfolio => {
+        if (portfolio.label === portfolioLabel) {
+          return {
+            ...portfolio,
+            assets: portfolio.assets.map(sector =>{
+              if (sector.label === sectorLabel) {
+                const assetExists = sector.assets.some(existingAsset => existingAsset.label === uppercaseAsset.label);
+                if (!assetExists) {
                   return {
                     ...sector,
-                    assets: [...sector.assets, asset]
+                    assets: [...sector.assets, uppercaseAsset]
                   };
+                } else {
+                  console.log("Asset Already exists");
+                  return sector;
                 }
-                return sector;
-              })
-            };
-          }
-          return portfolio;
-        })
-      );
+              }
+              return sector;
+            })
+          };
+        }
+        return portfolio;
+      })
+    );
+    setInputValue('');
+    setAssetValue('');
+    setAssetDate('');
   }
-
+  
   const [editedAsset, setEditedAsset] = useState(null);
   const [newValue, setNewValue] = useState('');
   const [newDate, setNewDate]= useState('');
@@ -268,6 +289,12 @@ function App(props) {
     });
 
     setPortfolios(updatedPortfolios);
+    setCurrentValues(prevValues => {
+      const updatedValues = {...prevValues };
+      const assetSymbol = assetToDelete.label;
+      delete updatedValues[assetSymbol];
+      return updatedValues;
+    })
   }
 
   const [totalValue, setTotalValue] = useState(0);
@@ -377,7 +404,6 @@ function App(props) {
               });
               fetchCount--;
               if (fetchCount <= 0) {
-                console.log("All Data received!")
                 setChartData(newChartData);
               }
             }
@@ -406,7 +432,6 @@ function App(props) {
 
   function handleTimeRangeChange(range) {
     setTimeRange(range);
-    console.log('Button Clicked:', range);
   };
 
   useEffect(() => {
@@ -451,7 +476,200 @@ function App(props) {
   const circleOptions = {
     chart: { title: 'Portfolio Percentage', width: 600, height: 400 },
   };
+  //Asset Form state
+  const [assetLabel, setAssetLabel] = useState('');
+  const [assetValue, setAssetValue] = useState('');
+  const [assetDate, setAssetDate] = useState('');
 
+  function handleAddAsset() {
+    if (selectedPortfolio && selectedSector && assetLabel && assetValue && assetDate) {
+      addAsset(selectedPortfolio, selectedSector, { label: assetLabel, value: parseFloat(assetValue), date: assetDate });
+      setAssetLabel('');
+      setAssetValue('');
+      setAssetDate('');
+    }
+  }
+  //positions view state
+  const [currentValues, setCurrentValues] = useState({});
+  const [sectorMarketValues, setSectorMarketValues] = useState({});
+  const [updatedTotalValue, setUpdatedTotalValue] = useState(0);
+
+  const assetsInSector = portfolios.flatMap(portfolio => {
+    const matchedAssetGroup = portfolio.assets.find(asset => asset.label === selectedSector);
+    return matchedAssetGroup && Array.isArray(matchedAssetGroup.assets)
+      ? matchedAssetGroup.assets
+      :[];
+  });
+  
+  const assetsInPortfolio = portfolios.flatMap(portfolio => {
+    if (portfolio.label === selectedPortfolio) {
+      return portfolio.assets.flatMap(assetGroup => assetGroup.assets);
+    }
+  })
+
+  const selectedKey = Object.keys(sectorTotals).find(key => key === selectedSector);
+  let totalAssetValue = 0;
+  if (selectedKey) {
+    totalAssetValue = sectorTotals[selectedKey]
+  }
+
+  useEffect(() => {
+    if (selectedSector) {
+      const stockSymbols = portfolios.flatMap(portfolio =>
+        portfolio.assets.flatMap(asset => 
+          asset.label === selectedSector && asset.assets
+          ? asset.assets.map(a => a.label)
+          : []
+        )
+      );
+
+      let fetchCount = stockSymbols.length;
+      
+      for (const symbol of stockSymbols) {
+        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=KV57JAKXRGJOP9VW`
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            const dailyData = data["Time Series (Daily)"];
+            const dates = Object.keys(dailyData);
+            dates.sort();
+            const lastDate = dates[dates.length - 1];
+            const marketValue = dailyData[lastDate]["4. close"];
+            const asset = assetsInSector.find(a => a.label === symbol);
+            const initialValue = dailyData[asset.date]["4. close"];
+            const shares = asset.value/initialValue;
+            const currentValue = shares * marketValue;
+            setCurrentValues(prevValues => ({
+              ...prevValues,
+              [symbol]: currentValue
+            }));
+          });
+        }  
+      } else if (selectedPortfolio) {
+          const stockSymbols = portfolios.flatMap(portfolio =>
+            portfolio.label === selectedPortfolio 
+              ? portfolio.assets.flatMap(asset => 
+                  asset.assets ? asset.assets.map(a => a.label) : [] 
+                )
+              : []
+          );
+
+          let fetchCount = stockSymbols.length;
+          
+          for (const symbol of stockSymbols) {
+            const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=KV57JAKXRGJOP9VW`
+            fetch(url)
+              .then(response => response.json())
+              .then(data => {
+                const dailyData = data["Time Series (Daily)"];
+                const dates = Object.keys(dailyData);
+                dates.sort();
+                const lastDate = dates[dates.length - 1];
+                const marketValue = dailyData[lastDate]["4. close"];
+                const asset = assetsInPortfolio.find(a => a.label === symbol);
+                const initialValue = dailyData[asset.date]["4. close"];
+                const shares = asset.value/initialValue;
+                const currentValue = shares * marketValue;
+                setCurrentValues(prevValues => ({
+                  ...prevValues,
+                  [symbol]: currentValue
+                }));
+              });
+            }
+          }
+        }, [portfolios, selectedSector, selectedPortfolio]);
+  
+  useEffect(() => {
+    const calculateSectorMarketValues = () => {
+      let sectorValues = {};
+
+      portfolios.forEach(portfolio => {
+        portfolio.assets.forEach(assetGroup => {
+          const sectorName = assetGroup.label;
+          let sectorTotal = assetGroup.assets.reduce((total, asset) => {
+            const currentValue = currentValues[asset.label] || 0;
+            return total + currentValue;
+          }, 0);
+
+          if (sectorTotal > 0) {
+            sectorValues[sectorName] = sectorTotal;
+          }
+        });
+      });
+
+      setSectorMarketValues(sectorValues);
+    };
+
+    calculateSectorMarketValues();
+  }, [currentValues, portfolios]);
+  
+  useEffect(() => {
+    const total = Object.values(currentValues).reduce((accumulator, value) => {
+      return accumulator + value;
+    }, 0);
+    setUpdatedTotalValue(total);
+  }, [portfolios, currentValues]);
+
+  useEffect(() => {
+    if (location.pathname === '/') {
+      setCurrentValues({});
+      setSelectedPortfolio('');
+      setSelectedSector('');
+      setSmartAdjust(false);
+    }
+  }, [location.pathname]);
+  
+  const [smartAdjust, setSmartAdjust] = useState(false)
+
+  //auto-complete
+  const [stockSuggestions, setStockSuggestions] = useState([]);
+  const [inputValue, setInputValue] = useState(props.assetLabel || '');
+  const [stockLabels, setStockLabels] = useState([]);
+  const maxSuggestions = 5;
+  
+  useEffect(() => {
+    if (inputValue) {
+      const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${inputValue}&apikey=KV57JAKXRGJOP9VW`;
+
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.bestMatches) {
+            const suggestions = data.bestMatches.map((match) => ({
+              symbol: match["1. symbol"],
+              name: match["2. name"],
+            }));
+            setStockLabels(suggestions);
+          } else {
+            setStockLabels([]);
+          }
+        })
+    }
+  }, [inputValue])
+
+  useEffect (() => {
+    if (inputValue) {
+      const filteredSuggestions = stockLabels.filter((label) => 
+        label.symbol.toLowerCase().includes(inputValue.toLowerCase()) ||
+        label.name.toLowerCase().includes(inputValue.toLowerCase())
+      );
+      setStockSuggestions(filteredSuggestions.slice(0, maxSuggestions));
+    } else {
+        setStockSuggestions([]);
+    }
+  }, [inputValue, stockLabels]);
+
+  function handleInputChange(ev) {
+    setInputValue(ev.target.value);
+    setAssetLabel(ev.target.value);
+  }
+
+  function handleSuggestionClick(suggestion) {
+    setInputValue(suggestion.symbol);
+    setAssetLabel(suggestion.symbol); 
+    setStockSuggestions([]); 
+  };
+  
   function renderItems(items) {
     if (!Array.isArray(items)) {
       console.error('Expected an array but got', items);
@@ -500,6 +718,12 @@ function App(props) {
               sectorTotals={sectorTotals}
               handleEditAsset={handleEditAsset}
               handleAssetDelete={handleAssetDelete}
+              assetsInSector={assetsInSector}
+              currentValues={currentValues}
+              totalAssetValue={totalAssetValue}
+              updatedTotalValue={updatedTotalValue}
+              setSmartAdjust={setSmartAdjust}
+              smartAdjust={smartAdjust}
             />
           }
         />
@@ -509,6 +733,22 @@ function App(props) {
             <PortfolioView
               setChoosePortfolio={setChoosePortfolio}
               selectedPortfolio={selectedPortfolio}
+              selectedSector={selectedSector}
+              setChooseSector={setChooseSector}
+              portfolios={portfolios}
+              sectorTotals={sectorTotals}
+              handleEditAsset={handleEditAsset}
+              handleAssetDelete={handleAssetDelete}
+              assetsInSector={assetsInSector}
+              currentValues={currentValues}
+              totalAssetValue={totalAssetValue}
+              updatedTotalValue={updatedTotalValue}
+              setSmartAdjust={setSmartAdjust}
+              smartAdjust={smartAdjust}
+              sectorTotals={sectorTotals}
+              deleteSector={deleteSector}
+              sectorMarketValues={sectorMarketValues}
+              selectSector={selectSector}
             />
           }
         />
@@ -551,6 +791,7 @@ function App(props) {
               handleSectorEditClick={handleSectorEditClick}
               deleteSector={deleteSector}
               handleEditAsset={handleEditAsset}
+              handleAssetDelete={handleAssetDelete}
             />
           }
         />
@@ -564,6 +805,17 @@ function App(props) {
               selectedSector={selectedSector}
               setSelectedSector={setSelectedSector}
               addAsset={addAsset}
+              assetLabel={assetLabel}
+              setAssetLabel={setAssetLabel}
+              assetValue={assetValue}
+              setAssetValue={setAssetValue}
+              assetDate={assetDate}
+              setAssetDate={setAssetDate}
+              handleAddAsset={handleAddAsset}
+              stockSuggestions={stockSuggestions}
+              inputValue={inputValue}
+              handleInputChange={handleInputChange}
+              handleSuggestionClick={handleSuggestionClick}
             />
           }
         />

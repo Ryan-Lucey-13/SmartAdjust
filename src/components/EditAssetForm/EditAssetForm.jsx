@@ -21,7 +21,7 @@ function  EditAssetForm(props) {
       <Link to={"/"}>
         <button onClick={props.handleAssetEditSave}>Save Edit</button>
       </Link>
-      <Link to={"/positions/"}>
+      <Link to={"/"}>
         <button onClick={props.handleAssetCancelClick}>Cancel</button>
       </Link>
     </div>

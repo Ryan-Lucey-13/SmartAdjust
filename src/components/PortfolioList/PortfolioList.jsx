@@ -6,6 +6,7 @@ function  PortfolioList(props) {
   return(
     <div>
       <h1 className="SA-title">Portfolios</h1>
+      <h2>Total Value: ${props.totalValue}</h2>
       <ul>
         {props.portfolios.map(portfolio => (
           <li className="SA-portfolio" key={portfolio.label}>
@@ -48,6 +49,7 @@ function  PortfolioList(props) {
                     <h3 className="SA-portfolio-sector" onClick={() => props.selectSector(sector.label)}>
                       - {sector.label.charAt(0).toUpperCase() + sector.label.slice(1)}
                       {props.sectorTotals[sector.label] !== undefined && ` : $${props.sectorTotals[sector.label]}`}
+
                     </h3>
                   </Link>
                   <button onClick={() => props.handleSectorEditClick(sector)}>Edit</button>

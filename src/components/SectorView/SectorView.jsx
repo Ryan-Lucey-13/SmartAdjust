@@ -17,7 +17,7 @@ function  SectorView(props) {
         <button>Positions</button>
       </Link>
       <h1>{props.selectedSector.charAt(0).toUpperCase() + props.selectedSector.slice(1)}</h1>
-      <button onClick={() => props.handleTimeRangeChange(3)}>3 M</button> <button onClick={() => props.handleTimeRangeChange(6)}>6 M</button> <button onClick={() => props.handleTimeRangeChange(12)}>12 M</button>
+      <button onClick={() => props.handleTimeRangeChange(3)}>3 Mo</button> <button onClick={() => props.handleTimeRangeChange(6)}>6 Mo</button> <button onClick={() => props.handleTimeRangeChange(12)}>1 Yr</button>
       <div id="chart-area">
         <LineChart data={props.chartData} options={props.options} />
         <PieChart data={props.circleChartData} options={props.circleOptions} />
