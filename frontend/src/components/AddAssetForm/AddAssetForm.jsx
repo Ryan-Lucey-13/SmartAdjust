@@ -24,7 +24,7 @@ function  AddAssetForm(props) {
         <select value={props.selectedSector} onChange={(ev) => props.setSelectedSector(ev.target.value)}>
           <option value="">Select Sector</option>
           {props.selectedPortfolio &&
-            props.portfolios.find(p => p.label === props.selectedPortfolio)?.assets.map((sector, index) => (
+            props.portfolios.find(p => p.label === props.selectedPortfolio)?.sectors.map((sector, index) => (
             <option key={index} value={sector.label}>{sector.label}</option>
           ))}
         </select>

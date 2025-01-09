@@ -11,7 +11,7 @@ function  PortfolioView(props) {
     .filter(portfolio => portfolio.label === props.selectedPortfolio) // Only include the selected portfolio
     .reduce((total, portfolio) => {
       // Sum the sector totals of the selected portfolio
-      const portfolioTotal = portfolio.assets.reduce((sectorTotal, sector) => {
+      const portfolioTotal = portfolio.sectors.reduce((sectorTotal, sector) => {
         return sectorTotal + (props.sectorTotals[sector.label] || 0);
       }, 0);
       return total + portfolioTotal; // Accumulate the total for all sectors in the selected portfolio
@@ -40,10 +40,10 @@ function  PortfolioView(props) {
           {props.portfolios
             .filter(portfolio => portfolio.label === props.selectedPortfolio)
             .map((portfolio, index) => (
-            portfolio.assets.map((sector, index) => (
+            portfolio.sectors.map((sector, index) => (
               <tr key={index}>
                 <td><Link to='/sector/' onClick={() => props.selectSector(sector.label)}>{sector.label.charAt(0).toUpperCase() + sector.label.slice(1)}</Link></td>
-                <td>${props.sectorTotals[sector.label].toFixed(2)}</td>
+                <td>${props.sectorTotals[sector.label].toFixed(2) || 0}</td>
                 <td>${(props.sectorMarketValues[sector.label] || 0).toFixed(2)}</td>
                 <td>{((((props.sectorMarketValues[sector.label] - props.sectorTotals[sector.label])/props.sectorTotals[sector.label])*100)).toFixed(2)}%</td>
                 <td>{((props.sectorTotals[sector.label]/totalValue)*100).toFixed(2)}%</td>
@@ -75,7 +75,7 @@ function  PortfolioView(props) {
             {props.portfolios
               .filter(portfolio => portfolio.label === props.selectedPortfolio)
               .map((portfolio, index) => (
-              portfolio.assets.map((sector, index) => (
+              portfolio.sectors.map((sector, index) => (
                 <tr key={index}>
                   <td><Link to='/sector/' onClick={() => props.selectSector(sector.label)}>{sector.label.charAt(0).toUpperCase() + sector.label.slice(1)}</Link></td>
                   <td>{((props.sectorTotals[sector.label]/totalValue)*100).toFixed(2)}%</td>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { LineChart, PieChart } from '@toast-ui/react-chart';
 import '@toast-ui/chart/dist/toastui-chart.css';
@@ -11,28 +13,40 @@ import SectorView from "./components/SectorView/SectorView.jsx"
 import PositionsView from "./components/PositionsView/PositionsView.jsx"
 import AddAssetForm from "./components/AddAssetForm/AddAssetForm.jsx"
 import EditAssetForm from "./components/EditAssetForm/EditAssetForm.jsx"
+import UserProfile from "./components/UserProfile/UserProfile.jsx"
+import LoginForm from "./components/LoginForm/LoginForm.jsx"
+import RegisterForm from "./components/RegisterForm/RegisterForm.jsx"
 
 function App(props) {
   const [data, setData] = useState({});
-  const [portfolios, setPortfolios] = useState([{
-      label: "portfolio 1",
-      assets: [ 
-        {
-          label: "Tech",
-          assets: [
-            { label: "NVDA", value: 1000, date: '2024-09-05' },
-            { label: "AMZN", value: 1000, date: '2024-09-05' }
-          ]
-        },
-        {
-          label: "ETF",
-          assets: [
-            { label: "VTI", value: 1000, date: '2024-09-05' },
-            { label: "VT", value: 200, date: '2024-09-05' }
-          ]
-        },
-      ]
-    }]);
+  const [portfolios, setPortfolios] = useState([]);
+  const [user, setUser] = useState(null);
+
+  useEffect (() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    console.log(storedUser);
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log('User is set:', user);
+    if (user) {
+      axios
+        .get(`http://localhost:8000/api/portfolios/?user_id=${user.id}`, {
+          withCredentials: true,
+        })
+        .then((response) => {
+          setPortfolios(response.data);
+        })
+        .catch((error) => {
+          console.error('Error fetching portfolios:', error);
+        });
+    } else {
+      console.log('No user loggin in')
+    }
+  }, [user]);
 
   const [newPortfolio, setNewPortfolio] = useState(false);
   const [selectedPortfolio, setSelectedPortfolio] = useState('');
@@ -55,24 +69,75 @@ function App(props) {
     setInput(ev.target.value);
   }
 
+  function getCSRFToken() {
+    const match = document.cookie.match(/csrftoken=([^;]+)/);
+    return match ? match[1] : '';
+  };
+
   function addNewPortfolioInput() {
     if (input) {
-      setPortfolios([
-        ...portfolios,
-        { label: input, assets: [] }
-      ]);
-      cancelNewPortfolioInput();
+      const newPortfolio = {
+        label: input,
+      };
+      console.log('Sending new portfolio', newPortfolio);
+      const csrfToken = getCSRFToken()
+      if (!csrfToken) {
+        console.error('No CSRF token available');
+        return;
+      }
+      axios.post(
+        'http://localhost:8000/api/portfolios/', 
+        newPortfolio, 
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        }
+      )
+      .then((response) => {
+        setPortfolios([
+          ...portfolios,
+          response.data
+        ]);
+        cancelNewPortfolioInput();
+      })
+      .catch((error) => {
+        console.error('Error adding new portfolio:', error);
+      });
     }
   }
 
   function editPortfolio(oldLabel, newLabel) {
     setPortfolios(prevPortfolios =>
       prevPortfolios.map(portfolio =>
-        portfolio.label === oldLabel
-        ? {...portfolio, label: newLabel}
-        : portfolio
-        )
-      );
+          portfolio.label === oldLabel
+          ? { ...portfolio, label: newLabel }
+          : portfolio
+      )
+    );
+    const portfolioToUpdate = portfolios.find(portfolio => portfolio.label === oldLabel);
+
+    if (portfolioToUpdate) {
+      axios.put(
+          `http://localhost:8000/api/portfolios/${portfolioToUpdate.id}/`,
+          { label: newLabel },
+          {
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+          }
+      )
+      .then(response => {
+          console.log("Portfolio updated:", response.data);
+      })
+      .catch(error => {
+          console.error("Error updating portfolio:", error);
+      });
+    }
   }
 
   const [editingPortfolio, setEditingPortfolio] = useState(null);
@@ -100,6 +165,27 @@ function App(props) {
     setPortfolios(prevPortfolios =>
       prevPortfolios.filter(portfolio => portfolio.label !== portfolioLabel)
     );
+
+    const portfolioToDelete = portfolios.find(portfolio => portfolio.label === portfolioLabel);
+
+    if (portfolioToDelete) {
+      axios.delete(
+        `http://localhost:8000/api/portfolios/${portfolioToDelete.id}/`,
+        {
+          headers: {
+              'X-CSRFToken': getCSRFToken(),
+              'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        }
+      )
+      .then(response => {
+        console.log("Portfolio deleted:", response.data);
+      })
+      .catch(error => {
+        console.error("Error deleting portfolio:", error);
+      });
+    }
   }
 
   function handleNewSectorClick(portfolioLabel) {
@@ -114,38 +200,132 @@ function App(props) {
 
   function addNewSectorInput() {
     if (selectedPortfolio && input) {
-      setPortfolios(portfolios.map(portfolio => {
-        if (portfolio.label === selectedPortfolio) {
-          return {
-            ...portfolio,
-            assets: [
-              ...portfolio.assets,
-              { label: input, assets: [] }
-            ]
-          };
-        }
-        return portfolio;
-      }));
+      setPortfolios(prevPortfolios =>
+        prevPortfolios.map(portfolio => {
+          if (portfolio.label === selectedPortfolio) {
+            return {
+              ...portfolio,
+              sectors: [
+                ...portfolio.sectors,
+                { label: input, portfolio: portfolio.id, assets: [] }  
+              ]
+            };
+          }
+          return portfolio;
+        })
+      );
+      cancelNewSectorInput();
+    }
+  }
+
+  function addNewSectorInput() {
+    if (selectedPortfolio && input) {
+      const portfolioObj = portfolios.find(portfolio => portfolio.label === selectedPortfolio);
+      if (!portfolioObj) {
+        console.error('Selected Portfolio not found');
+        return
+      }
+      setPortfolios(prevPortfolios =>
+        prevPortfolios.map(portfolio => {
+          if (portfolio.label === selectedPortfolio) {
+            return {
+              ...portfolio,
+              sectors: [
+                ...portfolio.sectors,
+                { label: input, portfolio: portfolioObj.id, asset:[] }
+              ]
+            };
+          }
+          return portfolio;
+        })
+      );
+      
+      axios.post(
+        'http://localhost:8000/api/sectors/', 
+        {
+          label: input,
+          portfolio: portfolioObj.id,
+          asset: [],
+        },
+          {
+            headers: {
+              'X-CSRFToken': getCSRFToken(),  
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+          }
+      )
+      .then(response => {
+          console.log("New sector created:", response.data);
+      })
+      .catch(error => {
+          console.error("Error adding new sector:", error);
+
+          setPortfolios(prevPortfolios =>
+            prevPortfolios.map(portfolio => {
+              if (portfolio.label === selectedPortfolio) {
+                return {
+                  ...portfolio,
+                  sectors: portfolio.sectors.filter(sector => sector.label !== input) 
+                };
+              }
+              return portfolio;
+            })
+          );
+      });
       cancelNewSectorInput();
     }
   }
 
   function editSector(portfolioLabel, oldSectorLabel, newSectorLabel) {
+    const portfolio = portfolios.find(p => p.label === portfolioLabel);
+    if (!portfolio) {
+      console.error("Portfolio not found");
+      return;
+    }
+
+    const sector = portfolio.sectors.find(s => s.label === oldSectorLabel);
+    if (!sector) {
+      console.error("Sector not found");
+      return;
+    }
+
     setPortfolios(prevPortfolios =>
-      prevPortfolios.map(portfolio => {
-        if (portfolio.label === portfolioLabel) {
+      prevPortfolios.map(p => {
+        if (p.label === portfolioLabel) {
           return {
-            ...portfolio,
-            assets: portfolio.assets.map(sector =>
-              sector.label === oldSectorLabel
-              ? {...sector, label: newSectorLabel}
-              : sector
+            ...p,
+            sectors: p.sectors.map(s =>
+              s.label === oldSectorLabel
+                ? { ...s, label: newSectorLabel }
+                : s
             )
           };
         }
-        return portfolios;
+        return p;
       })
     );
+
+    axios.put(
+        `http://localhost:8000/api/sectors/${sector.id}/`,
+        { 
+          label: newSectorLabel,
+          portfolio: portfolio.id
+        },
+        {
+          headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        }
+    )
+    .then(response => {
+        console.log('Sector updated:', response.data);
+    })
+    .catch(error => {
+        console.error('Error updating sector:', error);
+    });
   }
 
   const [editingSector, setEditingSector] = useState(null);
@@ -170,17 +350,46 @@ function App(props) {
   }
 
   function deleteSector(portfolioLabel, sectorLabel) {
+    const portfolio = portfolios.find(p => p.label === portfolioLabel);
+    if (!portfolio) {
+      console.error("Portfolio not found");
+      return;
+    }
+
+    const sector = portfolio.sectors.find(s => s.label === sectorLabel);
+    if (!sector) {
+      console.error("Sector not found");
+      return;
+    }
+
     setPortfolios(prevPortfolios =>
-      prevPortfolios.map(portfolio => {
-        if (portfolio.label === portfolioLabel) {
+      prevPortfolios.map(p => {
+        if (p.label === portfolioLabel) {
           return {
-            ...portfolio,
-            assets:portfolio.assets.filter(sector => sector.label !== sectorLabel)
+            ...p,
+            sectors: p.sectors.filter(s => s.label !== sectorLabel)
           };
         }
-        return portfolio;
+        return p;
       })
     );
+
+    axios.delete(
+      `http://localhost:8000/api/sectors/${sector.id}/`,
+      {
+        headers: {
+          'X-CSRFToken': getCSRFToken(),
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
+      }
+    )
+    .then(response => {
+      console.log('Sector deleted:', response.data);
+    })
+    .catch(error => {
+      console.error('Error deleting sector:', error);
+    });
   }
 
   function selectSector(sectorLabel) {
@@ -196,36 +405,61 @@ function App(props) {
   function addAsset(portfolioLabel, sectorLabel, asset) {
     const uppercaseAsset = {
       ...asset,
-      label: asset.label.toUpperCase()
+      label: asset.label.toUpperCase(),
     };
-    setPortfolios(prevPortfolios =>
-      prevPortfolios.map(portfolio => {
-        if (portfolio.label === portfolioLabel) {
-          return {
-            ...portfolio,
-            assets: portfolio.assets.map(sector =>{
-              if (sector.label === sectorLabel) {
-                const assetExists = sector.assets.some(existingAsset => existingAsset.label === uppercaseAsset.label);
-                if (!assetExists) {
-                  return {
-                    ...sector,
-                    assets: [...sector.assets, uppercaseAsset]
-                  };
-                } else {
-                  console.log("Asset Already exists");
-                  return sector;
-                }
-              }
-              return sector;
-            })
-          };
+
+    const portfolio = portfolios.find(p => p.label === portfolioLabel);
+    const sector = portfolio?.sectors.find(s => s.label === sectorLabel);
+    const portfolioId = portfolio.id;
+    const sectorId = sector.id;
+
+    axios
+      .post(
+        'http://localhost:8000/api/assets/', 
+        {
+          ...uppercaseAsset,
+          sector: sectorId,
+          portfolio: portfolioId,
+        },
+        {
+          headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
         }
-        return portfolio;
+      )
+      .then((response) => {
+        setPortfolios((prevPortfolios) =>
+          prevPortfolios.map((portfolio) => {
+            if (portfolio.label === portfolioLabel) {
+              return {
+                ...portfolio,
+                sectors: portfolio.sectors.map((sector) => {
+                  if (sector.label === sectorLabel) {
+                    return {
+                      ...sector,
+                      assets: [
+                        ...sector.assets,
+                        { ...uppercaseAsset, id: response.data.id },
+                      ],
+                    };
+                  }
+                  return sector;
+                }),
+              };
+            }
+            return portfolio;
+          })
+        );
+
+        setInputValue('');
+        setAssetValue('');
+        setAssetDate('');
       })
-    );
-    setInputValue('');
-    setAssetValue('');
-    setAssetDate('');
+      .catch((error) => {
+        console.error('Error adding asset:', error);
+      });
   }
   
   const [editedAsset, setEditedAsset] = useState(null);
@@ -240,31 +474,60 @@ function App(props) {
 
   function handleAssetEditSave() {
     if (editedAsset && newValue !== '') {
-      const updatedPortfolios = portfolios.map(portfolio => {
-        return {
-          ...portfolio,
-          assets: portfolio.assets.map(assetGroup => {
-            if (assetGroup.label === selectedSector) {
+      
+      const updatedAsset = {
+        ...editedAsset,
+        value: parseFloat(newValue),
+        date: newDate,
+      };
+
+      axios
+        .put(
+          `http://localhost:8000/api/assets/${editedAsset.id}/`,
+          updatedAsset,
+          {
+            headers: {
+              'X-CSRFToken': getCSRFToken(),
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+          }
+        )
+        .then((response) => {
+          setPortfolios((prevPortfolios) =>
+            prevPortfolios.map((portfolio) => {
               return {
-                ...assetGroup,
-                assets: assetGroup.assets.map(a => {
-                  if (a.label === editedAsset.label) {
-                    return { ...a, value: parseFloat(newValue), date: newDate };
+                ...portfolio,
+                sectors: portfolio.sectors.map((sector) => {
+                  if (sector.label === selectedSector) {
+                    return {
+                      ...sector,
+                      assets: sector.assets.map((asset) => {
+                        if (asset.id === editedAsset.id) {
+                          return {
+                            ...asset,
+                            value: parseFloat(newValue),
+                            date: newDate,
+                          };
+                        }
+                        return asset;
+                      }),
+                    };
                   }
-                  return a;
-                })
+                  return sector;
+                }),
               };
-            }
-            return assetGroup;
-          })
-        };
-      });
-      setPortfolios(updatedPortfolios);
-      setEditedAsset(null);
-      setNewValue('');
-      setNewDate('');
+            })
+          );
+          setEditedAsset(null);
+          setNewValue('');
+          setNewDate('');
+        })
+        .catch((error) => {
+          console.error('Error editing asset:', error);
+        });
     }
-  };
+  }
 
   function handleAssetCancelClick() {
     setEditedAsset(null);
@@ -273,28 +536,45 @@ function App(props) {
   }
 
   function handleAssetDelete(assetToDelete) {
-    const updatedPortfolios = portfolios.map(portfolio => {
-      return {
-        ...portfolio,
-        assets: portfolio.assets.map(assetGroup => {
-          if (assetGroup.label === selectedSector) {
-            return {
-              ...assetGroup,
-              assets: assetGroup.assets.filter(asset => asset !== assetToDelete) 
-            };
-          }
-          return assetGroup;
-        })
-      };
-    });
+    axios
+      .delete(
+        `http://localhost:8000/api/assets/${assetToDelete.id}/`,
+        {
+          headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        }
+      )
+      .then((response) => {
+        const updatedPortfolios = portfolios.map(portfolio => {
+          return {
+            ...portfolio,
+            sectors: portfolio.sectors.map(assetGroup => {
+              if (assetGroup.label === selectedSector) {
+                return {
+                  ...assetGroup,
+                  assets: assetGroup.assets.filter(asset => asset.id !== assetToDelete.id)
+                };
+              }
+              return assetGroup;
+            })
+          };
+        });
 
-    setPortfolios(updatedPortfolios);
-    setCurrentValues(prevValues => {
-      const updatedValues = {...prevValues };
-      const assetSymbol = assetToDelete.label;
-      delete updatedValues[assetSymbol];
-      return updatedValues;
-    })
+        setPortfolios(updatedPortfolios);
+
+        setCurrentValues(prevValues => {
+          const updatedValues = { ...prevValues };
+          const assetSymbol = assetToDelete.label;
+          delete updatedValues[assetSymbol];
+          return updatedValues;
+        });
+      })
+      .catch((error) => {
+        console.error('Error deleting asset:', error);
+      });
   }
 
   const [totalValue, setTotalValue] = useState(0);
@@ -302,51 +582,61 @@ function App(props) {
   const [portfolioTotals, setPortfolioTotals] = useState(0);
 
   function calculateTotalValue() {
-    let total = 0
+    let total = 0;
+
     portfolios.forEach(portfolio => {
-      portfolio.assets.forEach(asset => {
-        if (Array.isArray(asset.assets)) {
-          asset.assets.forEach(item => {
-            total += item.value;
-          });
-        } else {
-          total += asset.value;
-        }
-      })
-    })
+      if (Array.isArray(portfolio.sectors)) {
+        portfolio.sectors.forEach(sector => {
+          if (Array.isArray(sector.assets)) {
+            sector.assets.forEach(asset => {
+              if (typeof asset.value === 'number') {
+                total += asset.value;
+              }
+            });
+          }
+        });
+      }
+    });
+
     return total;
-  };
+  }
 
   function calculatePortfolioValue() {
     return portfolios.map(portfolio => {
-      let portfolioTotal = 0
-      portfolio.assets.forEach(asset => {
-        if (Array.isArray(asset.assets)) {
-          asset.assets.forEach(item => {
-            portfolioTotal += item.value;
-          });
-        } else {
-          portfolioTotal += asset.value;
-        }
-      });
+      let portfolioTotal = 0;
+
+      // Ensure portfolio.sectors is an array before iterating
+      if (Array.isArray(portfolio.sectors)) {
+        portfolio.sectors.forEach(sector => {
+          // Ensure sector.assets is an array before iterating
+          if (Array.isArray(sector.assets)) {
+            sector.assets.forEach(asset => {
+              // Sum the value of each asset
+              portfolioTotal += asset.value;
+            });
+          }
+        });
+      }
+
       return portfolioTotal;
-    ;})
-  };
+    });
+  }
 
   function calculateSectorTotals() {
-    let totals = {}
+    let totals = {};
+
     portfolios.forEach(portfolio => {
-      portfolio.assets.forEach(asset => {
-        if (Array.isArray(asset.assets)) {
-          const sectorTotal = asset.assets.reduce((sum,item) => sum + item.value, 0);
-          totals[asset.label] = (totals[asset.label] || 0) + sectorTotal;
-        } else {
-          totals[asset.label] = (totals[asset.label] || 0) + asset.value;
+      portfolio.sectors.forEach(sector => {
+        if (Array.isArray(sector.assets)) {
+          // If assets are an array, calculate the total value of all assets in that sector
+          const sectorTotal = sector.assets.reduce((sum, item) => sum + item.value, 0);
+          totals[sector.label] = (totals[sector.label] || 0) + sectorTotal;
         }
       });
     });
+
     return totals;
-  };
+  }
 
   useEffect(() => {
     const total = calculateTotalValue();
@@ -365,10 +655,10 @@ function App(props) {
   useEffect(() => {
     if (selectedSector) {
       const stockSymbols = portfolios.flatMap(portfolio =>
-        portfolio.assets.flatMap(asset => 
-          asset.label === selectedSector && asset.assets
-          ? asset.assets.map(a => a.label)
-          : []
+        portfolio.sectors.flatMap(sector =>  
+          sector.label === selectedSector && sector.assets
+            ? sector.assets.map(asset => asset.label)
+            : []
         )
       );
 
@@ -444,33 +734,45 @@ function App(props) {
     setSectorTotals(sectorTotals);
 
     const seriesData = [];
+
     portfolios.forEach(portfolio => {
-      portfolio.assets.forEach(asset => {
-        if (Array.isArray(asset.assets)) {
-          asset.assets.forEach(item => {
-            if (asset.label === selectedSector) { 
-              const percentage = (item.value / total) * 100; 
-              seriesData.push({
-                name: item.label,
-                data: percentage
-              });
-            }
-          });
-        } else {
-          if (asset.label === selectedSector) { 
-            const percentage = (asset.value / total) * 100; 
-            seriesData.push({
-              name: asset.label,
-              data: percentage
+      // Ensure portfolio.sectors is an array before iterating
+      if (Array.isArray(portfolio.sectors)) {
+        portfolio.sectors.forEach(sector => {
+          // Ensure sector.assets is an array before iterating
+          if (Array.isArray(sector.assets)) {
+            sector.assets.forEach(asset => {
+              // If asset has nested assets, ensure asset.assets is an array before iterating
+              if (Array.isArray(asset.assets)) {
+                asset.assets.forEach(item => {
+                  if (sector.label === selectedSector) {
+                    const percentage = (item.value / total) * 100;
+                    seriesData.push({
+                      name: item.label,
+                      data: percentage,
+                    });
+                  }
+                });
+              } else {
+                if (sector.label === selectedSector) {
+                  const percentage = (asset.value / total) * 100;
+                  seriesData.push({
+                    name: asset.label,
+                    data: percentage,
+                  });
+                }
+              }
             });
           }
-        }
-      });
+        });
+      }
     });
+
     setCircleChartData({
       categories: ['Assets'],
       series: seriesData,
     });
+
   }, [portfolios, selectedSector]);
 
   const circleOptions = {
@@ -495,17 +797,20 @@ function App(props) {
   const [updatedTotalValue, setUpdatedTotalValue] = useState(0);
 
   const assetsInSector = portfolios.flatMap(portfolio => {
-    const matchedAssetGroup = portfolio.assets.find(asset => asset.label === selectedSector);
-    return matchedAssetGroup && Array.isArray(matchedAssetGroup.assets)
-      ? matchedAssetGroup.assets
-      :[];
+    return portfolio.sectors.flatMap(sector => {
+      if (sector.label === selectedSector) {
+        return sector.assets;
+      }
+      return [];
+    });
   });
   
   const assetsInPortfolio = portfolios.flatMap(portfolio => {
     if (portfolio.label === selectedPortfolio) {
-      return portfolio.assets.flatMap(assetGroup => assetGroup.assets);
+      return portfolio.sectors.flatMap(sector => sector.assets);
     }
-  })
+    return []; 
+  });
 
   const selectedKey = Object.keys(sectorTotals).find(key => key === selectedSector);
   let totalAssetValue = 0;
@@ -516,10 +821,10 @@ function App(props) {
   useEffect(() => {
     if (selectedSector) {
       const stockSymbols = portfolios.flatMap(portfolio =>
-        portfolio.assets.flatMap(asset => 
-          asset.label === selectedSector && asset.assets
-          ? asset.assets.map(a => a.label)
-          : []
+        portfolio.sectors.flatMap(sector =>  
+          sector.label === selectedSector && sector.assets
+            ? sector.assets.map(asset => asset.label)
+            : []
         )
       );
 
@@ -547,9 +852,9 @@ function App(props) {
         }  
       } else if (selectedPortfolio) {
           const stockSymbols = portfolios.flatMap(portfolio =>
-            portfolio.label === selectedPortfolio 
-              ? portfolio.assets.flatMap(asset => 
-                  asset.assets ? asset.assets.map(a => a.label) : [] 
+            portfolio.label === selectedPortfolio
+              ? portfolio.sectors.flatMap(sector =>
+                  sector.assets ? sector.assets.map(a => a.label) : []
                 )
               : []
           );
@@ -584,17 +889,24 @@ function App(props) {
       let sectorValues = {};
 
       portfolios.forEach(portfolio => {
-        portfolio.assets.forEach(assetGroup => {
-          const sectorName = assetGroup.label;
-          let sectorTotal = assetGroup.assets.reduce((total, asset) => {
-            const currentValue = currentValues[asset.label] || 0;
-            return total + currentValue;
-          }, 0);
+        // Ensure portfolio.sectors is an array before iterating
+        if (Array.isArray(portfolio.sectors)) {
+          portfolio.sectors.forEach(sector => {
+            // Ensure sector.assets is an array before reducing
+            if (Array.isArray(sector.assets)) {
+              const sectorName = sector.label;
+              let sectorTotal = sector.assets.reduce((total, asset) => {
+                // Get the current value from currentValues, defaulting to 0
+                const currentValue = currentValues[asset.label] || 0;
+                return total + currentValue;
+              }, 0);
 
-          if (sectorTotal > 0) {
-            sectorValues[sectorName] = sectorTotal;
-          }
-        });
+              if (sectorTotal > 0) {
+                sectorValues[sectorName] = sectorTotal;
+              }
+            }
+          });
+        }
       });
 
       setSectorMarketValues(sectorValues);
@@ -602,7 +914,7 @@ function App(props) {
 
     calculateSectorMarketValues();
   }, [currentValues, portfolios]);
-  
+
   useEffect(() => {
     const total = Object.values(currentValues).reduce((accumulator, value) => {
       return accumulator + value;
@@ -669,7 +981,7 @@ function App(props) {
     setAssetLabel(suggestion.symbol); 
     setStockSuggestions([]); 
   };
-  
+
   function renderItems(items) {
     if (!Array.isArray(items)) {
       console.error('Expected an array but got', items);
@@ -792,6 +1104,8 @@ function App(props) {
               deleteSector={deleteSector}
               handleEditAsset={handleEditAsset}
               handleAssetDelete={handleAssetDelete}
+              user={user}
+              setUser={setUser}
             />
           }
         />
@@ -835,6 +1149,29 @@ function App(props) {
               handleAssetEditSave={handleAssetEditSave}
               editedAsset={editedAsset}
               handleAssetCancelClick={handleAssetCancelClick}
+            />
+          }
+        />
+        <Route
+          path="/profile/"
+          element={
+            <UserProfile
+              user={user}
+            />
+          }
+        />
+        <Route
+          path="/login/"
+          element={
+            <LoginForm
+              setUser={setUser}
+            />
+          }
+        />
+        <Route
+          path="/register/"
+          element={
+            <RegisterForm
             />
           }
         />

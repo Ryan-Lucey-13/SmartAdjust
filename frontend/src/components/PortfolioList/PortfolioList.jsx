@@ -1,10 +1,31 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import LogoutButton from "../LogoutButton/LogoutButton";
+import LoginForm from "../LoginForm/LoginForm"
 import './PortfolioList.css';
 
 function  PortfolioList(props) {
   return(
     <div>
+      {props.user ? (
+      <>
+      <Link to={'/login/'}>
+        <p>Login</p>
+      </Link>
+      <Link to={'/register/'}>
+        <p>Register</p>
+      </Link>
+      {props.user ? (
+        <>
+          <Link to={'/profile/'}>
+            <p>Profile</p>
+          </Link>
+          <LogoutButton setUser={props.setUser}
+          />
+        </>
+      ) : (
+        <p>Login</p>
+      )}
       <h1 className="SA-title">Portfolios</h1>
       <h2>Total Value: ${props.totalValue}</h2>
       <ul>
@@ -31,7 +52,7 @@ function  PortfolioList(props) {
               <button onClick={() => props.deletePortfolio(portfolio.label)}>Delete</button>
             </div>
             )}
-            {portfolio.assets.map(sector => (
+            {portfolio.sectors.map(sector => (
               <div key={sector.label}>
               {props.editingSector === sector.label ? (
                 <div>
@@ -90,6 +111,10 @@ function  PortfolioList(props) {
           <button onClick={props.addNewPortfolioInput}>Add Portfolio</button>
           <button onClick={props.cancelNewPortfolioInput}>x</button>
         </div>
+      )}
+      </>
+      ) : (
+        <LoginForm setUser={props.setUser} />
       )}
     </div>
   );
