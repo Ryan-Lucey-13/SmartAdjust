@@ -38,8 +38,8 @@ function  PositionsView(props) {
             className={props.updatedTotalValue - props.totalAssetValue >= 0 ? 'positive' : 'negative'}
             >
               ({(props.updatedTotalValue - props.totalAssetValue) >= 0
-                ? `+${(props.updatedTotalValue - props.totalAssetValue).toFixed(2)}`
-                : (props.updatedTotalValue - props.totalAssetValue).toFixed(2)})
+                ? `+$${(props.updatedTotalValue - props.totalAssetValue).toFixed(2)}`
+                : `-$${Math.abs((props.updatedTotalValue - props.totalAssetValue).toFixed(2))}`})
             </span>
         </h2>
       </div>

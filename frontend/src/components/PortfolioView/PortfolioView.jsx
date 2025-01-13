@@ -37,8 +37,8 @@ function  PortfolioView(props) {
             className={props.updatedTotalValue - totalValue >= 0 ? 'positive' : 'negative'}
           >
             ({(props.updatedTotalValue - totalValue) >= 0
-              ? `+${(props.updatedTotalValue - totalValue).toFixed(2)}`
-              : (props.updatedTotalValue - totalValue).toFixed(2)})
+              ? `+$${(props.updatedTotalValue - totalValue).toFixed(2)}`
+              : `-$${Math.abs((props.updatedTotalValue - totalValue).toFixed(2))}`})
           </span>
         </h2>
       </div>

@@ -58,3 +58,6 @@ th, td {
 	display: flex;
 	justify-content: flex-end;
 }
+.postive {
+	color: green;
+}
