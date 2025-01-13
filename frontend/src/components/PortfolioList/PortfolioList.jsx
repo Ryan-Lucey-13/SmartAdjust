@@ -2,120 +2,116 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import LogoutButton from "../LogoutButton/LogoutButton";
 import LoginForm from "../LoginForm/LoginForm"
+import NavBar from '../NavBar/NavBar';
 import './PortfolioList.css';
 
 function  PortfolioList(props) {
   return(
-    <div>
-      {props.user ? (
-      <>
-      <Link to={'/login/'}>
-        <p>Login</p>
-      </Link>
-      <Link to={'/register/'}>
-        <p>Register</p>
-      </Link>
-      {props.user ? (
-        <>
-          <Link to={'/profile/'}>
-            <p>Profile</p>
-          </Link>
-          <LogoutButton setUser={props.setUser}
-          />
-        </>
-      ) : (
-        <p>Login</p>
-      )}
+    <div className="SA-portfolio-list">
+    <NavBar user={props.user} setUser={props.setUser}/>
       <h1 className="SA-title">Portfolios</h1>
-      <h2>Total Value: ${props.totalValue}</h2>
-      <ul>
+      <div className="SA-header">
+      <div className="SA-header-buttons">
+      {!props.newPortfolio ? (
+        <button className="SA-new-portfolio-button" onClick={props.handleNewPortfolioClick}>Add Portfolio</button>
+      ) : (
+        <div className="SA-new-portfolio">
+          <input
+            className="SA-input"
+            placeholder="Enter New Portfolio Name..."
+            onChange={props.handleNewInput}
+            value={props.input}
+          />
+          <button className="SA-buttons SA-create-buttons" onClick={props.addNewPortfolioInput}>Add Portfolio</button>
+          <button className="SA-buttons SA-create-buttons" onClick={props.cancelNewPortfolioInput}>x</button>
+        </div>
+      )}
+      <Link to={"/addassetform/"}>
+        <button className="SA-new-asset-button">Add Asset</button>
+      </Link>
+      </div>
+      <h2 className="SA-totalvalue">Total Value: ${(props.totalValue || 0).toFixed(2) }</h2>
+      </div>
+      <ul className="SA-portfolio-container">
         {props.portfolios.map(portfolio => (
           <li className="SA-portfolio" key={portfolio.label}>
             {props.editingPortfolio === portfolio.label ? (
               <div>
-                <input 
+                <input
+                  className="SA-input"
                   type="text"
                   value={props.newPortfolioName}
                   onChange={(ev) => props.setNewPortfolioName(ev.target.value)}
                 />
-                <button onClick={() => props.handlePortfolioSaveClick(portfolio.label)}>Save</button>
-                <button onClick={props.handlePortfolioCancelClick}>Cancel</button>
+                <button className="SA-create-buttons" onClick={() => props.handlePortfolioSaveClick(portfolio.label)}>Save</button>
+                <button className="SA-create-buttons" onClick={props.handlePortfolioCancelClick}>Cancel</button>
               </div>
               ) : (
-            <div>
+            <div className="SA-portfolio-label">
               <Link to={'/portfolio/'}>
-                <h2 className="SA-portfolio-label" onClick={() => props.selectPortfolio(portfolio.label)}>
-                  {portfolio.label.charAt(0).toUpperCase() + portfolio.label.slice(1) + " : $" + props.portfolioTotals[props.portfolios.indexOf(portfolio)]}
+                <h2 className="SA-portfolio-name" onClick={() => props.selectPortfolio(portfolio.label)}>
+                  {portfolio.label.charAt(0).toUpperCase() + portfolio.label.slice(1) + " : $" + (props.portfolioTotals[props.portfolios.indexOf(portfolio)] || 0).toFixed(2)}
                 </h2>
               </Link>
-              <button onClick={() => props.handlePortfolioEditClick(portfolio)}>Edit</button>
-              <button onClick={() => props.deletePortfolio(portfolio.label)}>Delete</button>
+              <div className="SA-buttons-container">
+                <button className="SA-buttons SA-portfolio-buttons" onClick={() => props.handlePortfolioEditClick(portfolio)}>✏️</button>
+                <button className="SA-buttons SA-portfolio-buttons" onClick={() => props.deletePortfolio(portfolio.label)}>✖️</button>
+              </div>
             </div>
             )}
             {portfolio.sectors.map(sector => (
               <div key={sector.label}>
               {props.editingSector === sector.label ? (
                 <div>
-                  <input 
+                  <input
+                  className="SA-input"
                   type="text"
                   value={props.newSectorName}
                   onChange={(ev) => props.setNewSectorName(ev.target.value)}
                   />
-                  <button onClick={() => props.handleSectorSaveClick(portfolio.label)}>Save</button>
-                  <button onClick={props.handleSectorCancelClick}>Cancel</button>
+                  <button className="SA-buttons SA-create-buttons" onClick={() => props.handleSectorSaveClick(portfolio.label)}>Save</button>
+                  <button className="SA-buttons SA-create-buttons" onClick={props.handleSectorCancelClick}>Cancel</button>
                 </div>
               ) : (
-                <div>
+                <div className="SA-portfolio-sector">
                   <Link to={'/sector/'}>
-                    <h3 className="SA-portfolio-sector" onClick={() => props.selectSector(sector.label)}>
+                    <h3  className="SA-sector-label" onClick={() => props.selectSector(sector.label)}>
                       - {sector.label.charAt(0).toUpperCase() + sector.label.slice(1)}
-                      {props.sectorTotals[sector.label] !== undefined && ` : $${props.sectorTotals[sector.label]}`}
+                      {props.sectorTotals[sector.label] !== undefined && ` : $${(props.sectorTotals[sector.label] || 0).toFixed(2)}`}
 
                     </h3>
                   </Link>
-                  <button onClick={() => props.handleSectorEditClick(sector)}>Edit</button>
-                  <button onClick={() => props.deleteSector(portfolio.label, sector.label)}>Delete</button>
+                  <div className="SA-buttons-container">
+                    <button className="SA-buttons SA-sector-buttons" onClick={() => props.handleSectorEditClick(sector)}>✏️</button>
+                    <button className="SA-buttons SA-sector-buttons" onClick={() => props.deleteSector(portfolio.label, sector.label)}>✖️</button>
+                  </div>
                 </div>
               )}
                 {props.renderItems(sector.assets || [])}
               </div>
             ))}
             {!props.newSector && (
-              <button className= "SA-button" onClick={() => props.handleNewSectorClick(portfolio.label)}>
+              <button className= "SA-button SA-new-sector-button" onClick={() => props.handleNewSectorClick(portfolio.label)}>
                 Add Sector
               </button>
             )}
             {props.newSector && props.selectedPortfolio === portfolio.label && (
               <div className="SA-new-sector">
                 <input
+                  className="SA-input"
                   placeholder="Enter New Sector Name..."
                   onChange={props.handleNewInput}
                   value={props.input}
                 />
-                <button onClick={props.addNewSectorInput}>Add Sector</button>
-                <button onClick={props.cancelNewSectorInput}>x</button>
+                <button className="SA-buttons SA-create-buttons" onClick={props.addNewSectorInput}>Add Sector</button>
+                <button className="SA-buttons SA-create-buttons" onClick={props.cancelNewSectorInput}>x</button>
               </div>
             )}
           </li>
         ))}
       </ul>
-      {!props.newPortfolio ? (
-        <button className="SA-button" onClick={props.handleNewPortfolioClick}>Add Portfolio</button>
-      ) : (
-        <div className="SA-new-portfolio">
-          <input
-            placeholder="Enter New Portfolio Name..."
-            onChange={props.handleNewInput}
-            value={props.input}
-          />
-          <button onClick={props.addNewPortfolioInput}>Add Portfolio</button>
-          <button onClick={props.cancelNewPortfolioInput}>x</button>
-        </div>
-      )}
-      </>
-      ) : (
-        <LoginForm setUser={props.setUser} />
-      )}
+        {!props.user && <LoginForm setUser={props.setUser} />}
+
     </div>
   );
 }

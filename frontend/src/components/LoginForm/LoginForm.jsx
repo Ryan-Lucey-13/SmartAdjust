@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { LineChart, PieChart } from '@toast-ui/react-chart';
 import '@toast-ui/chart/dist/toastui-chart.css';
+import NavBar from '../NavBar/NavBar';
 import './LoginForm.css';
 
 
@@ -57,25 +58,35 @@ function  LoginForm(props) {
 
   return(
     <div>
-      <h2>Login</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleLoginSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(ev) => setUsername(ev.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(ev) => setPassword(ev.target.value)}
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
+      <NavBar user={props.user} setUser={props.setUser}/>
+      <div className="SA-login-container">
+        <div className="SA-login-form-container">
+        <h2 className="SA-login-title">Login</h2>
+        <Link to={'/register/'}>
+          <p className="SA-register">Create an account</p>
+        </Link>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <form onSubmit={handleLoginSubmit}>
+          <input
+            className="SA-login-input"
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(ev) => setUsername(ev.target.value)}
+            required
+          />
+          <input
+            className="SA-login-input"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(ev) => setPassword(ev.target.value)}
+            required
+          />
+          <button className="SA-login-submit" type="submit">Login</button>
+        </form>
+        </div>
+      </div>
     </div>
   );
 }

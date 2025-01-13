@@ -1,0 +1,62 @@
+.SA-asset-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    background-color: #D8C4B6;
+    padding: 50px;
+}
+
+.SA-asset-form-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 100%;
+    max-width: 400px;
+}
+.SA-asset-title {
+    color: #213555;
+    text-align: center;
+}
+.SA-asset-input {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #213555;
+    font-weight: bold;
+}
+.SA-asset-button {
+    display: block;
+    margin-top: 15px;
+    padding: 5px 8px;
+    background-color: #213555;
+    color: #F5EFE7;
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+.SA-asset-button:hover {
+    background-color: #F5EFE7;
+    color: #213555;
+    border-color: #213555;
+}
+.SA-asset-input select {
+  background-color: #F5EFE7;  
+  color: #213555;           
+  border: 1px solid #213555;  
+  padding: 4px 4px;          
+  border-radius: 4px;         
+  font-size: 12px;                       
+}
+.SA-asset-input input {
+    background-color: #F5EFE7;  
+    color: #213555;           
+    border: 1px solid #213555;  
+    padding: 4px 4px;          
+    border-radius: 4px;         
+    font-size: 12px;
+}
+.SA-asset-button-container {
+    display: flex;
+    justify-content: space-between;
+}

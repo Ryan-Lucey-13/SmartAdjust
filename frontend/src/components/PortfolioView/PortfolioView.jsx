@@ -2,29 +2,48 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { LineChart } from '@toast-ui/react-chart';
 import '@toast-ui/chart/dist/toastui-chart.css';
+import NavBar from '../NavBar/NavBar';
+import LoginForm from "../LoginForm/LoginForm"
 import './PortfolioView.css';
 
 
 function  PortfolioView(props) {
 
   const totalValue = props.portfolios
-    .filter(portfolio => portfolio.label === props.selectedPortfolio) // Only include the selected portfolio
+    .filter(portfolio => portfolio.label === props.selectedPortfolio)
     .reduce((total, portfolio) => {
-      // Sum the sector totals of the selected portfolio
       const portfolioTotal = portfolio.sectors.reduce((sectorTotal, sector) => {
         return sectorTotal + (props.sectorTotals[sector.label] || 0);
       }, 0);
-      return total + portfolioTotal; // Accumulate the total for all sectors in the selected portfolio
+      return total + portfolioTotal; 
   }, 0);
 
   return(
     <div>
+    <NavBar user={props.user} setUser={props.setUser}/>
+    <div className="SA-portfolio-view">
       <Link to={"/"}>
-        <button onClick={() => props.setChoosePortfolio(false)}>Return to Portfolios</button>
+        <p className="SA-return-link" onClick={() => props.setChoosePortfolio(false)}>Return to Portfolios</p>
       </Link>
-      <h1>{props.selectedPortfolio.charAt(0).toUpperCase() + props.selectedPortfolio.slice(1)}</h1>
-      <h2>${props.updatedTotalValue.toFixed(2)}/${totalValue.toFixed(2)}</h2>
-      <table>
+      <div className="SA-portfolio-info">
+        <h1 className="SA-portfolio-label-title">{props.selectedPortfolio.charAt(0).toUpperCase() + props.selectedPortfolio.slice(1)}</h1>
+        <h2 className="SA-portfolio-totalvalue"><span
+              className={props.updatedTotalValue > totalValue ? 'postive' : 'negative'}
+            >
+              ${props.updatedTotalValue.toFixed(2)}
+            </span>
+              /${totalValue.toFixed(2)}
+          <span
+            className={props.updatedTotalValue - totalValue >= 0 ? 'positive' : 'negative'}
+          >
+            ({(props.updatedTotalValue - totalValue) >= 0
+              ? `+${(props.updatedTotalValue - totalValue).toFixed(2)}`
+              : (props.updatedTotalValue - totalValue).toFixed(2)})
+          </span>
+        </h2>
+      </div>
+      <div className="SA-table-container">
+      <table className="SA-portfolio-table">
         <thead>
           <tr>
             <th>Sector</th>
@@ -44,25 +63,39 @@ function  PortfolioView(props) {
               <tr key={index}>
                 <td><Link to='/sector/' onClick={() => props.selectSector(sector.label)}>{sector.label.charAt(0).toUpperCase() + sector.label.slice(1)}</Link></td>
                 <td>${props.sectorTotals[sector.label].toFixed(2) || 0}</td>
-                <td>${(props.sectorMarketValues[sector.label] || 0).toFixed(2)}</td>
-                <td>{((((props.sectorMarketValues[sector.label] - props.sectorTotals[sector.label])/props.sectorTotals[sector.label])*100)).toFixed(2)}%</td>
+                <td><span 
+                      className={props.sectorMarketValues[sector.label] > props.sectorTotals[sector.label] ? 'postive' : 'negative'}
+                    >
+                    ${(props.sectorMarketValues[sector.label] || 0).toFixed(2)}
+                    </span>
+                </td>
+                <td>
+                  <span
+                    className={(((props.sectorMarketValues[sector.label] - props.sectorTotals[sector.label])/props.sectorTotals[sector.label])*100) > 0 ? 'positive' : 'negative'}
+                  >
+                    {((((props.sectorMarketValues[sector.label] - props.sectorTotals[sector.label])/props.sectorTotals[sector.label])*100)).toFixed(2)}%
+                  </span>
+                </td>
                 <td>{((props.sectorTotals[sector.label]/totalValue)*100).toFixed(2)}%</td>
                 <td>{((props.sectorMarketValues[sector.label]/props.updatedTotalValue)*100).toFixed(2)}%</td>
                 <td>
-                  <button onClick={() => props.deleteSector(portfolio.label, sector.label)}>X</button>
+                  <button className="SA-delete-button" onClick={() => props.deleteSector(portfolio.label, sector.label)}>X</button>
                 </td>
               </tr>
             ))
           ))}
         </tbody>
       </table>
-      
+      </div>
       {props.smartAdjust === true ?
-        <div>
-          <h2>SmartAdjusted Portfolio</h2>
-          <h4>Current Portfolio Value: ${props.updatedTotalValue.toFixed(2)}</h4>
-          <p>*Based on your initial portfolio percentages this is how to adjust your portfolio to return to those percentages</p>
-          <table>
+        <div className="SA-smart-adjust">
+          <div className="SA-smart-adjust-info">
+            <h2 className="SA-portfolio-label-title">Smart Adjusted Portfolio</h2>
+            <h4>Current Portfolio Value: ${props.updatedTotalValue.toFixed(2)}</h4>
+            <p>*Based on your initial portfolio percentages this is how to adjust your portfolio to return to those percentages.</p>
+          </div>
+          <div className="SA-table-container">
+          <table className="SA-smart-adjust-table">
             <thead>
               <tr>
                 <th>Position</th>
@@ -92,10 +125,13 @@ function  PortfolioView(props) {
             ))}
             </tbody>
           </table>
+          </div>
+          <button className="SA-smart-adjust-button" onClick={()=> props.setSmartAdjust(false)}>SmartAdjust</button>
         </div>
         :
-        <button onClick={()=> props.setSmartAdjust(true)}>SmartAdjust</button> 
+        <button className="SA-smart-adjust-button" onClick={()=> props.setSmartAdjust(true)}>SmartAdjust</button> 
       }
+    </div>
     </div>
   );
 }

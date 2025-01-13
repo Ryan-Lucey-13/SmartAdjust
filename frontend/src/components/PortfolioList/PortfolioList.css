@@ -1,30 +1,86 @@
+.SA-portfolio-list {
+  display: flex;
+  flex-direction: column;
+  background-color: #F5EFE7;
+  min-height: 100vh;
+}
 .SA-portfolio {
   list-style-type: none;
-
+  background-color: #F5EFE7;
+  border: 2px #213555 solid;
+  box-shadow: 0px 1px 5px #3E5879;
 }
+.SA-header { 
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-right: 40px;
+  margin-left: 40px;
+  height: 60px;
+}
+
+.SA-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.SA-portfolio-container {
+  margin: 0;
+  margin-right: 30px;
+}
+
 .SA-portfolio-label {
-  background-color: white;
-  width: 95%;
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  text-shadow: 1px 1px 1px #3E5879;
+  box-shadow: 0px 1px 2px #3E5879;
+  height: 50px;
+  background-color: #213555;
   padding-left: 20px;
+  position: relative;
+}
+
+.SA-portfolio-name {
+  color: #D8C4B6;
 }
 
 .SA-portfolio-sector {
-  background-color: white;
-  width: 90%;
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  background-color: #D8C4B6;
+  box-shadow: 0px 1px 3px #3E5879;
   padding-left: 10px;
-  margin-left: 35px;
+  margin-left: 20px;
 }
+.SA-sector-label{
+  color: #3E5879;
 
+}
 .SA-portfolio-investments {
-  background-color: grey;
-  width: 85%;
-  margin-top: 2px;
+  background-color: #3E5879;
+  color: #F5EFE7;
+  border: 1px #213555 solid;
   padding-left: 10px;
-  margin-left: 35px;
+  margin-left: 4px;
 }
 
 .SA-title {
   text-align: center;
+  color: #213555;
+  text-shadow: 1px 1px 1px #3E5879;
+  margin: 0px;
+  padding-top: 10px;
+}
+
+.SA-totalvalue {
+  display: flex;
+  justify-content: flex-end;
+  color: #213555;
+  text-shadow: 1px 1px 1px #D8C4B6;
 }
 
 .SA-button {
@@ -42,4 +98,131 @@
   margin-left: auto;
   margin-right: auto;
   text-align: center;
+}
+
+.SA-buttons-container {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  gap: 1px;
+  padding-right: 2px;
+}
+
+.SA-buttons {
+  padding: 5px 8px;
+}
+
+.SA-portfolio-buttons {
+  background-color: #D8C4B6;
+  border: 1px #213555 solid;
+  box-shadow: 1px 1px 1px #3E5879;
+  transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+.SA-portfolio-buttons:hover {
+  background-color: #3E5879;
+  border-color:#D8C4B6;
+}
+.SA-sector-buttons {
+  background-color: #3E5879;
+  box-shadow: 1px 1px 2px #3E5879;
+}
+.SA-sector-buttons:hover {
+  background-color: #213555;
+  border-color: #3E5879;
+  transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+.SA-new-sector-button {
+  background-color: #213555;
+  color: #D8C4B6;
+  box-shadow: 1px 1px 1px #D8C4B6;
+  padding: 6px 10px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+.SA-new-sector-button:hover {
+  background-color: #D8C4B6;
+  color: #213555;
+  border-color: #213555;
+}
+.SA-new-portfolio-button {
+  background-color: #D8C4B6;
+  color: #213555;
+  border: 1px #213555 solid;
+  box-shadow: 0px 0px 3px #3E5879;
+  height: auto;
+  padding: 0px 8px;
+  border-radius: 8px 8px 0px 0px;
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+.SA-new-portfolio-button:hover {
+  background-color: #213555;
+  color: #D8C4B6;
+  border-color: #D8C4B6;
+}
+.SA-new-asset-button {
+  background-color: #D8C4B6;
+  color: #213555;
+  border: 1px #213555 solid;
+  box-shadow: 0px 0px 3px #3E5879;
+  border-radius: 8px 8px 0px 0px;
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+.SA-new-asset-button:hover {
+  background-color: #213555;
+  color: #D8C4B6;
+  border-color: #D8C4B6;
+}
+.SA-input {
+  background-color: #D8C4B6;
+  color: #3E5879;
+  font: 14px;
+  font-weight: bold;
+  height: 22px;
+  width: 175px;
+  border: 1px #213555 solid;
+  padding-left: 2px;
+  border-radius: 5px;
+}
+.SA-input:focus {
+  outline: red;
+}
+.SA-create-buttons {
+  background-color: #3E5879;
+  color: #F5EFE7;
+  border: .5px #F5EFE7 solid;
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+.SA-create-buttons:hover {
+  background-color: #F5EFE7;
+  color: #3E5879;
+  border-color: #3E5879;
+}
+.SA-new-portfolio {
+  align-items: center;
+  padding-right: 5px;
+}
+.SA-portfolio-name {
+  transition: color 0.5s ease;
+}
+.SA-portfolio-name:hover {
+  color: white;
+}
+.SA-sector-label {
+  transition: color 0.5s ease;
+}
+.SA-sector-label:hover {
+  color: #213555;
+}
+@media (max-width: 780px) {
+  .SA-header {
+    flex-direction: column;
+    align-items: center;
+    height:auto;
+  }
+}
+@media (max-width: 430px) {
+  .SA-portfolio-label, .SA-portfolio-sector {
+    height: auto;
+  }
 }

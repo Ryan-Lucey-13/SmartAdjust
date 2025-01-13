@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { Navigate} from 'react-router-dom';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { LineChart, PieChart } from '@toast-ui/react-chart';
@@ -16,6 +17,7 @@ import EditAssetForm from "./components/EditAssetForm/EditAssetForm.jsx"
 import UserProfile from "./components/UserProfile/UserProfile.jsx"
 import LoginForm from "./components/LoginForm/LoginForm.jsx"
 import RegisterForm from "./components/RegisterForm/RegisterForm.jsx"
+import NavBar from "./components/NavBar/NavBar.jsx"
 
 function App(props) {
   const [data, setData] = useState({});
@@ -200,26 +202,6 @@ function App(props) {
 
   function addNewSectorInput() {
     if (selectedPortfolio && input) {
-      setPortfolios(prevPortfolios =>
-        prevPortfolios.map(portfolio => {
-          if (portfolio.label === selectedPortfolio) {
-            return {
-              ...portfolio,
-              sectors: [
-                ...portfolio.sectors,
-                { label: input, portfolio: portfolio.id, assets: [] }  
-              ]
-            };
-          }
-          return portfolio;
-        })
-      );
-      cancelNewSectorInput();
-    }
-  }
-
-  function addNewSectorInput() {
-    if (selectedPortfolio && input) {
       const portfolioObj = portfolios.find(portfolio => portfolio.label === selectedPortfolio);
       if (!portfolioObj) {
         console.error('Selected Portfolio not found');
@@ -257,6 +239,7 @@ function App(props) {
       )
       .then(response => {
           console.log("New sector created:", response.data);
+          window.location.reload();
       })
       .catch(error => {
           console.error("Error adding new sector:", error);
@@ -461,7 +444,14 @@ function App(props) {
         console.error('Error adding asset:', error);
       });
   }
-  
+  function handleCancelAddAsset() {
+    setInputValue('');
+    setAssetValue('');
+    setAssetDate('')
+    setSelectedPortfolio('');
+    setSelectedSector('');
+  }
+
   const [editedAsset, setEditedAsset] = useState(null);
   const [newValue, setNewValue] = useState('');
   const [newDate, setNewDate]= useState('');
@@ -605,13 +595,10 @@ function App(props) {
     return portfolios.map(portfolio => {
       let portfolioTotal = 0;
 
-      // Ensure portfolio.sectors is an array before iterating
       if (Array.isArray(portfolio.sectors)) {
         portfolio.sectors.forEach(sector => {
-          // Ensure sector.assets is an array before iterating
           if (Array.isArray(sector.assets)) {
             sector.assets.forEach(asset => {
-              // Sum the value of each asset
               portfolioTotal += asset.value;
             });
           }
@@ -628,7 +615,6 @@ function App(props) {
     portfolios.forEach(portfolio => {
       portfolio.sectors.forEach(sector => {
         if (Array.isArray(sector.assets)) {
-          // If assets are an array, calculate the total value of all assets in that sector
           const sectorTotal = sector.assets.reduce((sum, item) => sum + item.value, 0);
           totals[sector.label] = (totals[sector.label] || 0) + sectorTotal;
         }
@@ -703,7 +689,7 @@ function App(props) {
   }, [portfolios, selectedSector, timeRange]);
 
   const options = {
-    chart: { title: 'Stocks Monthly Closing Prices', width: 1000, height: 500 },
+    chart: { title: 'Stocks Monthly Closing Prices', width: 600, height: 400 },
     xAxis: {
       title: 'Month',
     },
@@ -736,13 +722,10 @@ function App(props) {
     const seriesData = [];
 
     portfolios.forEach(portfolio => {
-      // Ensure portfolio.sectors is an array before iterating
       if (Array.isArray(portfolio.sectors)) {
         portfolio.sectors.forEach(sector => {
-          // Ensure sector.assets is an array before iterating
           if (Array.isArray(sector.assets)) {
             sector.assets.forEach(asset => {
-              // If asset has nested assets, ensure asset.assets is an array before iterating
               if (Array.isArray(asset.assets)) {
                 asset.assets.forEach(item => {
                   if (sector.label === selectedSector) {
@@ -776,7 +759,7 @@ function App(props) {
   }, [portfolios, selectedSector]);
 
   const circleOptions = {
-    chart: { title: 'Portfolio Percentage', width: 600, height: 400 },
+    chart: { title: 'Portfolio Percentage', width: 500, height: 400 },
   };
   //Asset Form state
   const [assetLabel, setAssetLabel] = useState('');
@@ -889,14 +872,11 @@ function App(props) {
       let sectorValues = {};
 
       portfolios.forEach(portfolio => {
-        // Ensure portfolio.sectors is an array before iterating
         if (Array.isArray(portfolio.sectors)) {
           portfolio.sectors.forEach(sector => {
-            // Ensure sector.assets is an array before reducing
             if (Array.isArray(sector.assets)) {
               const sectorName = sector.label;
               let sectorTotal = sector.assets.reduce((total, asset) => {
-                // Get the current value from currentValues, defaulting to 0
                 const currentValue = currentValues[asset.label] || 0;
                 return total + currentValue;
               }, 0);
@@ -927,6 +907,13 @@ function App(props) {
       setCurrentValues({});
       setSelectedPortfolio('');
       setSelectedSector('');
+      setSmartAdjust(false);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (location.pathname === '/sector/') {
+      setCurrentValues({});
       setSmartAdjust(false);
     }
   }, [location.pathname]);
@@ -992,7 +979,7 @@ function App(props) {
       <ul>
         {items.map((item, index) => (
           <li className="SA-portfolio-investments" key={index}>
-            {item.label} {item.value ? `: $${item.value}` : ''}
+            {item.label} {item.value ? `: $${item.value.toFixed(2)}` : ''}
             {item.assets && item.assets.length > 0 && renderItems(item.assets)}
           </li>
         ))}
@@ -1016,6 +1003,9 @@ function App(props) {
               circleChartData={circleChartData}
               circleOptions={circleOptions}
               handleTimeRangeChange={handleTimeRangeChange}
+              timeRange={timeRange}
+              user={user}
+              setUser={setUser}
             />
           }
         />
@@ -1036,6 +1026,8 @@ function App(props) {
               updatedTotalValue={updatedTotalValue}
               setSmartAdjust={setSmartAdjust}
               smartAdjust={smartAdjust}
+              user={user}
+              setUser={setUser}
             />
           }
         />
@@ -1057,10 +1049,11 @@ function App(props) {
               updatedTotalValue={updatedTotalValue}
               setSmartAdjust={setSmartAdjust}
               smartAdjust={smartAdjust}
-              sectorTotals={sectorTotals}
               deleteSector={deleteSector}
               sectorMarketValues={sectorMarketValues}
               selectSector={selectSector}
+              user={user}
+              setUser={setUser}
             />
           }
         />
@@ -1126,10 +1119,13 @@ function App(props) {
               assetDate={assetDate}
               setAssetDate={setAssetDate}
               handleAddAsset={handleAddAsset}
+              handleCancelAddAsset={handleCancelAddAsset}
               stockSuggestions={stockSuggestions}
               inputValue={inputValue}
               handleInputChange={handleInputChange}
               handleSuggestionClick={handleSuggestionClick}
+              user={user}
+              setUser={setUser}
             />
           }
         />
@@ -1175,7 +1171,6 @@ function App(props) {
             />
           }
         />
-      )}
       </Routes>
     </Router>
     </>

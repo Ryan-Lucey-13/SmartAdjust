@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { LineChart, PieChart } from '@toast-ui/react-chart';
 import '@toast-ui/chart/dist/toastui-chart.css';
+import NavBar from '../NavBar/NavBar';
 import './RegisterForm.css';
 
 
@@ -53,33 +54,44 @@ function  RegisterForm(props) {
 
   return(
     <div>
-      <h2>Register</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
-      <form onSubmit={handleRegisterSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(ev) => setUsername(ev.target.value)}
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(ev) => setEmail(ev.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(ev) => setPassword(ev.target.value)}
-          required
-        />
-        <button type="submit">Register</button>
-      </form>
+      <NavBar user={props.user} setUser={props.setUser}/>
+      <div className="SA-register-container">
+        <div className="SA-register-form-container">
+          <h2 className="SA-login-title">Register</h2>
+          <Link to={'/login/'}>
+            <p className="SA-login">Already have an account? Log in.</p>
+          </Link>
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+          {success && <p style={{ color: 'green' }}>{success}</p>}
+          <form onSubmit={handleRegisterSubmit}>
+            <input
+              className="SA-register-input"
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(ev) => setUsername(ev.target.value)}
+              required
+            />
+            <input
+              className="SA-register-input"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(ev) => setEmail(ev.target.value)}
+              required
+            />
+            <input
+              className="SA-register-input"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(ev) => setPassword(ev.target.value)}
+              required
+            />
+            <button className="SA-register-submit" type="submit">Register</button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

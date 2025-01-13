@@ -44,7 +44,7 @@ function  LogoutButton(props) {
 
 
   return(
-    <button onClick={handleLogout}>Logout</button>
+    <button className="SA-logout-button" onClick={handleLogout}>Logout</button>
   );
 }
 
