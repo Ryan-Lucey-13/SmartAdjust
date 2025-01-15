@@ -88,7 +88,7 @@ function App(props) {
         return;
       }
       axios.post(
-        '${apiUrl}/api/portfolios/', 
+        `${apiUrl}/api/portfolios/`, 
         newPortfolio, 
         {
           headers: {
@@ -223,7 +223,7 @@ function App(props) {
       );
       
       axios.post(
-        '${apiUrl}/api/sectors/', 
+        `${apiUrl}/api/sectors/`, 
         {
           label: input,
           portfolio: portfolioObj.id,
@@ -398,7 +398,7 @@ function App(props) {
 
     axios
       .post(
-        '${apiUrl}/api/assets/', 
+        `${apiUrl}/api/assets/`, 
         {
           ...uppercaseAsset,
           sector: sectorId,
