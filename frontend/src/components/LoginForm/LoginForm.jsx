@@ -17,9 +17,18 @@ function  LoginForm(props) {
   const navigate = useNavigate();
 
   function getCSRFToken() {
-    const match = document.cookie.match(/csrftoken=([^;]+)/);
-    return match ? match[1] : '';
-  };
+    const cookies = document.cookie;  // Get all cookies
+    console.log('Cookies:', cookies);  // Log all cookies to see if csrftoken is there
+
+    const match = cookies.match(/csrftoken=([^;]+)/);
+    if (match) {
+      console.log('CSRF token found:', match[1]);  // Log the CSRF token to ensure it's being fetched
+      return match[1];
+    } else {
+      console.log('CSRF token not found');
+      return null;
+    }
+  }
   const apiUrl = 'https://smart-adjust-backend-946401044616.herokuapp.com'
   function handleLoginSubmit(ev) {
     ev.preventDefault();
