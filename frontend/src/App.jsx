@@ -73,8 +73,14 @@ function App(props) {
 
   function getCSRFToken() {
     const match = document.cookie.match(/csrftoken=([^;]+)/);
-    return match ? match[1] : '';
-  };
+    if (match) {
+      console.log('CSRF token found:', match[1]);  // Log the CSRF token to ensure it's being fetched
+      return match[1];
+    } else {
+      console.log('CSRF token not found');
+      return null;
+    }
+  }
 
   function addNewPortfolioInput() {
     if (input) {
