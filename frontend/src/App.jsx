@@ -81,7 +81,7 @@ function App(props) {
       return null;
     }
   }
-
+  console.log('CSRF Token:', getCSRFToken());
   function addNewPortfolioInput() {
     if (input) {
       const newPortfolio = {
