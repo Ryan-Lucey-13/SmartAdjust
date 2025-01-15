@@ -20,7 +20,7 @@ function  LoginForm(props) {
     const match = document.cookie.match(/csrftoken=([^;]+)/);
     return match ? match[1] : '';
   };
-
+  const apiUrl = 'https://smart-adjust-backend-946401044616.herokuapp.com'
   function handleLoginSubmit(ev) {
     ev.preventDefault();
     const data = {
@@ -29,7 +29,7 @@ function  LoginForm(props) {
     }
     
     axios.post(
-      'http://localhost:8000/api/login/', 
+      `${apiURL}/api/login/`, 
         data,
         {
           headers: {

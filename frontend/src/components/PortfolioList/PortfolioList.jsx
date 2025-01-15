@@ -8,7 +8,9 @@ import './PortfolioList.css';
 function  PortfolioList(props) {
   return(
     <div className="SA-portfolio-list">
-    <NavBar user={props.user} setUser={props.setUser}/>
+    {props.user && <NavBar user={props.user} setUser={props.setUser}/>}
+    {props.user ? (
+      <>
       <h1 className="SA-title">Portfolios</h1>
       <div className="SA-header">
       <div className="SA-header-buttons">
@@ -110,8 +112,10 @@ function  PortfolioList(props) {
           </li>
         ))}
       </ul>
-        {!props.user && <LoginForm setUser={props.setUser} />}
-
+      </>
+      ) : (
+         <LoginForm setUser={props.setUser} />
+      )}
     </div>
   );
 }

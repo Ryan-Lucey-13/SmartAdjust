@@ -22,7 +22,7 @@ function  RegisterForm(props) {
     const match = document.cookie.match(/csrftoken=([^;]+)/);
     return match ? match[1] : '';
   };
-
+  const apiUrl = 'https://smart-adjust-backend-946401044616.herokuapp.com'
   function handleRegisterSubmit(ev) {
     ev.preventDefault();
     const data = {
@@ -32,7 +32,7 @@ function  RegisterForm(props) {
     }
     
     axios.post(
-      'http://localhost:8000/register/', 
+      `${apiURL}/register/`, 
         data,
         {
           headers: {
