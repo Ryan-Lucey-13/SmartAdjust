@@ -31,12 +31,12 @@ function App(props) {
       setUser(storedUser);
     }
   }, []);
-
+  const apiUrl = 'https://smart-adjust-backend-946401044616.herokuapp.com'
   useEffect(() => {
     console.log('User is set:', user);
     if (user) {
       axios
-        .get(`http://localhost:8000/api/portfolios/?user_id=${user.id}`, {
+        .get(`${apiUrl}/api/portfolios/?user_id=${user.id}`, {
           withCredentials: true,
         })
         .then((response) => {
@@ -88,7 +88,7 @@ function App(props) {
         return;
       }
       axios.post(
-        'http://localhost:8000/api/portfolios/', 
+        '${apiUrl}/api/portfolios/', 
         newPortfolio, 
         {
           headers: {
@@ -123,7 +123,7 @@ function App(props) {
 
     if (portfolioToUpdate) {
       axios.put(
-          `http://localhost:8000/api/portfolios/${portfolioToUpdate.id}/`,
+          `${apiUrl}/api/portfolios/${portfolioToUpdate.id}/`,
           { label: newLabel },
           {
             headers: {
@@ -172,7 +172,7 @@ function App(props) {
 
     if (portfolioToDelete) {
       axios.delete(
-        `http://localhost:8000/api/portfolios/${portfolioToDelete.id}/`,
+        `${apiUrl}/api/portfolios/${portfolioToDelete.id}/`,
         {
           headers: {
               'X-CSRFToken': getCSRFToken(),
@@ -223,7 +223,7 @@ function App(props) {
       );
       
       axios.post(
-        'http://localhost:8000/api/sectors/', 
+        '${apiUrl}/api/sectors/', 
         {
           label: input,
           portfolio: portfolioObj.id,
@@ -290,7 +290,7 @@ function App(props) {
     );
 
     axios.put(
-        `http://localhost:8000/api/sectors/${sector.id}/`,
+        `${apiUrl}/api/sectors/${sector.id}/`,
         { 
           label: newSectorLabel,
           portfolio: portfolio.id
@@ -358,7 +358,7 @@ function App(props) {
     );
 
     axios.delete(
-      `http://localhost:8000/api/sectors/${sector.id}/`,
+      `${apiUrl}/api/sectors/${sector.id}/`,
       {
         headers: {
           'X-CSRFToken': getCSRFToken(),
@@ -398,7 +398,7 @@ function App(props) {
 
     axios
       .post(
-        'http://localhost:8000/api/assets/', 
+        '${apiUrl}/api/assets/', 
         {
           ...uppercaseAsset,
           sector: sectorId,
@@ -473,7 +473,7 @@ function App(props) {
 
       axios
         .put(
-          `http://localhost:8000/api/assets/${editedAsset.id}/`,
+          `${apiUrl}/api/assets/${editedAsset.id}/`,
           updatedAsset,
           {
             headers: {
@@ -528,7 +528,7 @@ function App(props) {
   function handleAssetDelete(assetToDelete) {
     axios
       .delete(
-        `http://localhost:8000/api/assets/${assetToDelete.id}/`,
+        `${apiUrl}/api/assets/${assetToDelete.id}/`,
         {
           headers: {
             'X-CSRFToken': getCSRFToken(),
