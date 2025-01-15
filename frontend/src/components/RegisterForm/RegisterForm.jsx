@@ -32,7 +32,7 @@ function  RegisterForm(props) {
     }
     
     axios.post(
-      `${apiURL}/register/`, 
+      `${apiUrl}/register/`, 
         data,
         {
           headers: {
