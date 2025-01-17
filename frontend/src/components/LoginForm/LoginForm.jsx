@@ -17,12 +17,12 @@ function  LoginForm(props) {
   const navigate = useNavigate();
 
   function getCSRFToken() {
-    const cookies = document.cookie;  // Get all cookies
-    console.log('Cookies:', cookies);  // Log all cookies to see if csrftoken is there
+    const cookies = document.cookie;
+    console.log('Cookies:', cookies);
 
     const match = cookies.match(/csrftoken=([^;]+)/);
     if (match) {
-      console.log('CSRF token found:', match[1]);  // Log the CSRF token to ensure it's being fetched
+      console.log('CSRF token found:', match[1]);
       return match[1];
     } else {
       console.log('CSRF token not found');

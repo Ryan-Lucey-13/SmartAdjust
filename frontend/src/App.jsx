@@ -70,7 +70,7 @@ function App(props) {
   function handleNewInput(ev) {
     setInput(ev.target.value);
   }
-
+  console.log(document.cookies)
   function getCSRFToken() {
     const cookies = document.cookie;  // Get all cookies
     console.log('Cookies:', cookies);  // Log all cookies to see if csrftoken is there
@@ -84,7 +84,7 @@ function App(props) {
       return null;
     }
   }
-  
+
   function addNewPortfolioInput() {
     if (input) {
       const newPortfolio = {
