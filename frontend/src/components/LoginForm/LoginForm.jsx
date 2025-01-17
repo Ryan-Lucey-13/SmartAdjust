@@ -42,7 +42,6 @@ function  LoginForm(props) {
         data,
         {
           headers: {
-            'X-CSRFToken': getCSRFToken(),
             'Content-Type': 'application/json',
         },
        withCredentials: true,
