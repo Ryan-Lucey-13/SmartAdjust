@@ -45,7 +45,8 @@ function  LoginForm(props) {
             'X-CSRFToken': getCSRFToken(),
             'Content-Type': 'application/json',
         },
-       withCredentials: true 
+       withCredentials: true,
+       withXSRFToken: true,
       })
     .then(response => {
       if (response.data && response.data.user) {

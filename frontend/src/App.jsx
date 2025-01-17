@@ -38,6 +38,7 @@ function App(props) {
       axios
         .get(`${apiUrl}/api/portfolios/?user_id=${user.id}`, {
           withCredentials: true,
+          withXSRFToken: true,
         })
         .then((response) => {
           setPortfolios(response.data);
@@ -72,12 +73,12 @@ function App(props) {
   }
   console.log(document.cookies)
   function getCSRFToken() {
-    const cookies = document.cookie;  // Get all cookies
-    console.log('Cookies:', cookies);  // Log all cookies to see if csrftoken is there
+    const cookies = document.cookie;
+    console.log('Cookies:', cookies);
 
     const match = cookies.match(/csrftoken=([^;]+)/);
     if (match) {
-      console.log('CSRF token found:', match[1]);  // Log the CSRF token to ensure it's being fetched
+      console.log('CSRF token found:', match[1]);  
       return match[1];
     } else {
       console.log('CSRF token not found');
@@ -105,6 +106,7 @@ function App(props) {
             'Content-Type': 'application/json',
           },
           withCredentials: true,
+          withXSRFToken: true,
         }
       )
       .then((response) => {
