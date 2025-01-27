@@ -18,15 +18,16 @@ function  LogoutButton(props) {
 
   function handleLogout() {
     const csrfToken = getCSRFToken();
-
+    const apiUrl = 'https://smart-adjust-backend-946401044616.herokuapp.com'
     axios.post(
-      'http://localhost:8000/api/logout/', 
+      `${apiUrl}/api/logout/`, 
       {}, 
       {
         headers: {
           'X-CSRFToken': csrfToken,
         },
-        withCredentials: true
+        withCredentials: true,
+        withXSRFToken: true,
       }
     )
     .then(() => {

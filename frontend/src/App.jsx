@@ -92,12 +92,17 @@ function App(props) {
         label: input,
       };
       console.log('Sending new portfolio', newPortfolio);
-      
+      const csrfToken = getCSRFToken()
+      if (!csrfToken) {
+        console.error('No CSRF token available');
+        return;
+      }
       axios.post(
         `${apiUrl}/api/portfolios/`, 
         newPortfolio, 
         {
           headers: {
+            'X-CSRFToken': csrfToken,
             'Content-Type': 'application/json',
           },
           withCredentials: true,
