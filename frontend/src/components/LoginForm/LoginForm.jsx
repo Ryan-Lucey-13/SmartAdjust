@@ -43,6 +43,7 @@ function  LoginForm(props) {
         {
           headers: {
             'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
         },
        withCredentials: true,
        withXSRFToken: true,
@@ -64,7 +65,40 @@ function  LoginForm(props) {
       setError('Invalid credentials. Please try again.');
     })
   }
-
+  function handleTestLoginSubmit() {
+    const data = {
+      username: "test1",
+      password: "lemonade33!"
+    }
+    
+    axios.post(
+      `${apiUrl}/api/login/`, 
+        data,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        },
+       withCredentials: true,
+       withXSRFToken: true,
+      })
+    .then(response => {
+      if (response.data && response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        if (response.data.token) {
+          localStorage.setItem('authToken', response.data.token)
+        }
+        props.setUser(response.data.user)
+        setError('');
+        navigate('/');
+      } else {
+          setError('Invalid credentials. Please try again.');
+      }
+    })
+    .catch(err => {
+      setError('Invalid credentials. Please try again.');
+    })
+  }
   return(
     <div>
       <NavBar user={props.user} setUser={props.setUser}/>
@@ -94,6 +128,7 @@ function  LoginForm(props) {
           />
           <button className="SA-login-submit" type="submit">Login</button>
         </form>
+        <button className="SA-login-submit" onClick={handleTestLoginSubmit}>Test Login</button>
         </div>
       </div>
     </div>
